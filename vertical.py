@@ -10,7 +10,7 @@ import utilsVideo as uv
 ### Luego, enter para confirmar la selección y el trackeo empieza automáticamente.
 
 # Cargar video
-cap = cv2.VideoCapture('naranja.mp4') # Tiro oblicuo mio (poner el video en el mismo directorio y
+cap = cv2.VideoCapture('videos/naranja.mp4') # Tiro oblicuo mio (poner el video en el mismo directorio y
 #																					con el mismo nombre o cambiar la ambas cosas)
 
 # Constantes útiles
@@ -85,7 +85,7 @@ cap.release()
 cv2.destroyAllWindows()
 
 # Graficar la posición
-y_positions_m = np.array(y_positions) * PX_TO_CM * 100
+y_positions_m = np.array(y_positions) * PX_TO_CM / 100
 plt.title('Posición de la botella en el tiempo')
 plt.plot(times, y_positions_m, marker='o')
 plt.xlabel('Tiempo (s)')
