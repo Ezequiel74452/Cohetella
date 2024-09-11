@@ -89,7 +89,7 @@ y_positions_m = np.array(y_positions) * PX_TO_CM * 100
 plt.title('Posición de la botella en el tiempo')
 plt.plot(times, y_positions_m, marker='o')
 plt.xlabel('Tiempo (s)')
-plt.ylabel('Y (cm)')
+plt.ylabel('Posición (m)')
 plt.grid(True)
 plt.show()
 
