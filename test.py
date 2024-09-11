@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 ### Luego, enter para confirmar la selección y el trackeo empieza automáticamente.
 
 # Cargar video
-cap = cv2.VideoCapture('../../rojo.MOV') # Tiro oblicuo mio (poner el video en el mismo directorio y
+cap = cv2.VideoCapture('naranja.mp4') # Tiro oblicuo mio (poner el video en el mismo directorio y
 #																					con el mismo nombre o cambiar la ambas cosas)
 
 # Constantes útiles
