@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import utilsVideo as uv
+import pandas as pd
 
 
 ### IMPORTANTE (USO)
@@ -10,17 +11,19 @@ import utilsVideo as uv
 ### Luego, enter para confirmar la selección y el trackeo empieza automáticamente.
 
 # Cargar video
-cap = cv2.VideoCapture('videos/naranja.mp4') # Tiro oblicuo mio (poner el video en el mismo directorio y
-#																					con el mismo nombre o cambiar la ambas cosas)
+cap = cv2.VideoCapture('videos/120fps.mp4') 
 
 # Constantes útiles
 VID_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 VID_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-print(VID_WIDTH, VID_HEIGHT)
 PISO = 942 # Calculado a ojo más o menos donde está la base del cohete (eje X)
 ORIGEN = 268 # Calculado a ojo más o menos desde el centro del cohete (eje Y)
-PX_TO_CM = 0.64286
-FPS = 240
+FPS = 120
+
+datos = {'Tiempo (s)':np.array([]),
+        'Posición Y (px)':np.array([])}
+
+df = pd.DataFrame(data=datos)
 
 # Rastreador CSRT
 tracker = cv2.legacy.TrackerCSRT.create()
@@ -40,9 +43,6 @@ frame_resized = uv.rescaleFrame(frame, scale=.5)
 bbox = cv2.selectROI(frame_resized, False)
 tracker.init(frame_resized, bbox)
 
-# Listas para almacenar las coordenadas de la trayectoria
-y_positions = []
-times = []
 
 frame_number = 0
 
@@ -59,16 +59,19 @@ while True:
         center_x = x + w // 2
         center_y = y + h // 2
 
-        final_y = VID_HEIGHT - PISO - (center_y * 2)
-
         # Guardar las posiciones de acuerdo a nuestro sistema de coordenadas
-        y_positions.append(final_y)
+        final_y = VID_HEIGHT - PISO - (center_y * 2)
 
         # Calcular el tiempo correspondiente a este fotograma
         time_elapsed = frame_number / FPS  # Tiempo en segundos
-        times.append(time_elapsed)
 
-        print(f"Y: {y_positions[-1]} en t = {time_elapsed:.2f} s")
+        datos_frame = {'Tiempo (s)':[time_elapsed],
+             'Posición Y (px)':[final_y]}
+
+        df_frame = pd.DataFrame(data=datos_frame)
+        df = pd.concat([df, df_frame], ignore_index=True)
+
+        print(f"Y: {final_y}, Tiempo: {time_elapsed}")
 
         # Dibujar la caja y el centro
         cv2.rectangle(frame_resized, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -84,18 +87,48 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 
-# Graficar la posición
-y_positions_m = np.array(y_positions) * PX_TO_CM / 100
+#Calcular posición en metros
+df['Posición Y (m)'] = df['Posición Y (px)'].apply(lambda x: uv.fromPixelsToMeters(x))
+
+def smooth_positions(positions, window_size=10):
+    return np.convolve(positions, np.ones(window_size)/window_size, mode='valid')
+
+smoothed_positions = smooth_positions(df['Posición Y (m)'], window_size=10)
+df = df.iloc[:len(smoothed_positions)]
+# Aumentar el tamaño de la ventana (window_size) para suavizar más
+#df['Posición Y (m)'] = smoothed_positions
+
+# Calcular las velocidades con las posiciones suavizadas
+df['Velocidad (m/s)'] = df['Posición Y (m)'].diff() / df['Tiempo (s)'].diff()	
+df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
+
+#Calcular la aceleración con las velocidades suavizadas
+df['Aceleración (m/s^2)'] = df['Velocidad (m/s)'].diff() / df['Tiempo (s)'].diff()	
+df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
+
+print(df)
+
+# Graficar la posición suavizada
 plt.title('Posición de la botella en el tiempo')
-plt.plot(times, y_positions_m, marker='o')
+plt.plot(df['Tiempo (s)'], df['Posición Y (m)'], marker='o')
 plt.xlabel('Tiempo (s)')
 plt.ylabel('Posición (m)')
 plt.grid(True)
 plt.show()
 
-# Gráfico viejo de la trayectoria en px
-#plt.plot(x_positions, y_positions, marker='o')
-#plt.xlabel('X (px)')
-#plt.ylabel('Y (px)')
-#plt.title('Trayectoria de la botella')
-#plt.show()
+# Graficar la velocidad con posiciones suavizadas
+plt.title('Velocidad de la botella en el tiempo')
+plt.plot(df['Tiempo (s)'], df['Velocidad (m/s)'], marker='o')
+plt.xlabel('Tiempo (s)')
+plt.ylabel('Velocidad (m/s)')
+plt.grid(True)
+plt.show()
+
+# Graficar la aceleración con posiciones suavizadas
+plt.title('Aceleración de la botella en el tiempo')
+plt.plot(df['Tiempo (s)'], df['Aceleración (m/s^2)'], marker='o')
+plt.xlabel('Tiempo (s)')
+plt.ylabel('Aceleración (m/s^2)')
+plt.grid(True)
+plt.show()
+
