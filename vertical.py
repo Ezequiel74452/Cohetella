@@ -10,6 +10,9 @@ import pandas as pd
 ### Clickear en una esquina cercana al cohete y mantener para formar el cuadrado.
 ### Luego, enter para confirmar la selección y el trackeo empieza automáticamente.
 
+
+
+
 # Cargar video
 cap = cv2.VideoCapture('videos/120fps.mp4') 
 
@@ -39,10 +42,8 @@ if not ret:
 
 frame_resized = uv.rescaleFrame(frame, scale=.5)
 
-# (Lo comentado arriba es un intento de trackear el tiro vertical)
 bbox = cv2.selectROI(frame_resized, False)
 tracker.init(frame_resized, bbox)
-
 
 frame_number = 0
 
@@ -52,6 +53,7 @@ while True:
         break
 
     frame_resized = uv.rescaleFrame(frame, scale=.5)
+
     # Actualizar el rastreador
     success, bbox = tracker.update(frame_resized)
     if success:
@@ -93,20 +95,21 @@ df['Posición Y (m)'] = df['Posición Y (px)'].apply(lambda x: uv.fromPixelsToMe
 def smooth_positions(positions, window_size=10):
     return np.convolve(positions, np.ones(window_size)/window_size, mode='valid')
 
+# Aumentar el tamaño de la ventana (window_size) para suavizar más
 smoothed_positions = smooth_positions(df['Posición Y (m)'], window_size=10)
 df = df.iloc[:len(smoothed_positions)]
-# Aumentar el tamaño de la ventana (window_size) para suavizar más
 #df['Posición Y (m)'] = smoothed_positions
 
-# Calcular las velocidades con las posiciones suavizadas
-df['Velocidad (m/s)'] = df['Posición Y (m)'].diff() / df['Tiempo (s)'].diff()	
+# Calcular las velocidades 
+df['Velocidad (m/s)'] = df['Posición Y (m)'].diff(periods=10) / df['Tiempo (s)'].diff(periods=10)	
 df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
 
-#Calcular la aceleración con las velocidades suavizadas
-df['Aceleración (m/s^2)'] = df['Velocidad (m/s)'].diff() / df['Tiempo (s)'].diff()	
+#Calcular la aceleración 
+df['Aceleración (m/s^2)'] = df['Velocidad (m/s)'].diff(periods=5) / df['Tiempo (s)'].diff(periods=5)	
 df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
 
 print(df)
+df.to_csv('data.csv', index=False)
 
 # Graficar la posición suavizada
 plt.title('Posición de la botella en el tiempo')
