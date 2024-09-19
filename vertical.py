@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import utilsVideo as uv
 import pandas as pd
-
+from sympy import *
+from scipy.optimize import curve_fit
 
 ### IMPORTANTE (USO)
 ### Cuando se abre el primer frame, hay que seleccionar un área (el cohete) a trackear.
@@ -11,10 +12,8 @@ import pandas as pd
 ### Luego, enter para confirmar la selección y el trackeo empieza automáticamente.
 
 
-
-
 # Cargar video
-cap = cv2.VideoCapture('videos/120fps.mp4') 
+cap = cv2.VideoCapture('videos/justo.mp4') 
 
 # Constantes útiles
 VID_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -111,6 +110,7 @@ df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
 print(df)
 df.to_csv('data.csv', index=False)
 
+"""
 # Graficar la posición suavizada
 plt.title('Posición de la botella en el tiempo')
 plt.plot(df['Tiempo (s)'], df['Posición Y (m)'], marker='o')
@@ -134,4 +134,43 @@ plt.xlabel('Tiempo (s)')
 plt.ylabel('Aceleración (m/s^2)')
 plt.grid(True)
 plt.show()
+"""
 
+
+#Creamos una figura con 3 filas y 1 columna
+fig, axs=plt.subplots(3, 1,figsize=(10, 10))
+
+#Graficamos la posición
+axs[0].plot(df['Tiempo (s)'], df['Posición Y (m)'])
+axs[0].set_title('Posición de la botella en el tiempo')
+axs[0].set_ylabel('Posición (m)')
+axs[0].grid(True)
+
+#Graficamos la velocidad
+axs[1].plot(df['Tiempo (s)'], df['Velocidad (m/s)'], color='green', marker='.')
+axs[1].set_title('Velocidad de la botella en el tiempo')
+axs[1].set_ylabel('Velocidad (m/s)')
+axs[1].grid(True)
+
+#Graficamos la aceleración
+axs[2].plot(df['Tiempo (s)'], df['Aceleración (m/s^2)'], color='orange', marker='.')
+axs[2].set_title('Aceleración de la botella en el tiempo')
+axs[2].set_ylabel('Aceleración (m/s^2)')
+axs[2].set_xlabel('Tiempo (s)')
+axs[2].grid(True)
+
+plt.tight_layout()
+plt.show()
+
+
+
+#Condiciones iniciales de velocidad y posición
+v0 = 0
+y0 = 0
+
+def velocity(t,g,vo):
+  return(g*t+vo)
+
+popt, pcov = curve_fit(velocity, xdata = df['Tiempo (s)'], ydata = df['Velocidad (m/s)'], p0 = [9.8, 0])
+errs = np.sqrt(np.diag(pcov))
+print(popt,errs)
