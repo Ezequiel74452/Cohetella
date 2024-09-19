@@ -1,6 +1,7 @@
 import cv2
 
 PX_TO_CM = 0.64286
+PX_TO_CM_OBLICUO = 0.9047
 
 def rescaleFrame(frame, scale=0.75):
   width = frame.shape[1] * scale
@@ -10,3 +11,6 @@ def rescaleFrame(frame, scale=0.75):
 
 def fromPixelsToMeters(x):
   return x * PX_TO_CM / 100
+
+def fromPixelsToMetersOblicuo(x):
+  return x * PX_TO_CM_OBLICUO / 100
