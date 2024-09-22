@@ -45,8 +45,7 @@ ORIGEN = 268 # Calculado a ojo más o menos desde el centro del cohete (eje Y)
 FPS = 120
 
 #dataframe donde se guardan posicion,velocidad y aceleracion
-dataFrame = pd.DataFrame(data= {'Tiempo (s)':np.array([]),
-                                'Posición Y (px)':np.array([])})
+dataFrame = pd.DataFrame(data= {'Tiempo (s)':np.array([]), 'Posición Y (px)':np.array([])})
 
 # Rastreador CSRT
 tracker = cv2.legacy.TrackerCSRT.create()
@@ -76,8 +75,7 @@ while True:
         # Calcular el tiempo correspondiente a este fotograma
         time_elapsed = frame_nro / FPS  # Tiempo en segundos
 
-        datos_del_frame = {'Tiempo (s)':[time_elapsed],
-             'Posición Y (px)':[final_y]}
+        datos_del_frame = {'Tiempo (s)':[time_elapsed], 'Posición Y (px)':[final_y]}
 
         dataFrameAuxiliar = pd.DataFrame(data=datos_del_frame)
         dataFrame = pd.concat([dataFrame, dataFrameAuxiliar], ignore_index=True)

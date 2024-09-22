@@ -4,14 +4,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import utilsVideo as uv
 
-"""
-
-### IMPORTANTE (USO)
+"""### IMPORTANTE (USO)
 ### Cuando se abre el primer frame, hay que seleccionar un área (el cohete) a trackear.
 ### Clickear en una esquina cercana al cohete y mantener para formar el cuadrado.
 ### Luego, enter para confirmar la selección y el trackeo empieza automáticamente.
 # Cargar video
-cap = cv2.VideoCapture('videos/rojo.MOV') # Tiro oblicuo mio (poner el video en el mismo directorio y
+cap = cv2.VideoCapture('videos/rojo2.MOV') # Tiro oblicuo mio (poner el video en el mismo directorio y
 #																					con el mismo nombre o cambiar la ambas cosas)
 
 # Constantes útiles
@@ -107,25 +105,8 @@ df['Aceleración X (m/s^2)'] = df['Velocidad X (m/s)'].diff(periods=5) / df['Tie
 df['Aceleración X (m/s^2)'] = df['Aceleración X (m/s^2)'].fillna(0)
 
 print(df)
-df.to_csv('data_oblicuo.csv', index=False)
+df.to_csv('data_oblicuo_2.csv', index=False)"""
 
-# Graficar la posición en Y suavizada
-#plt.title('Posición de la botella en el eje Y con respecto al tiempo')
-#plt.plot(df['Tiempo (s)'], df['Posición Y (m)'], marker='o')
-#plt.xlabel('Tiempo (s)')
-#plt.ylabel('Posición (m)')
-#plt.grid(True)
-#plt.show()
-
-# Graficar la posición en X suavizada
-#plt.title('Posición de la botella en el eje X con respecto al tiempo')
-#plt.plot(df['Tiempo (s)'], df['Posición X (m)'], marker='o')
-#plt.xlabel('Tiempo (s)')
-#plt.ylabel('Posición (m)')
-#plt.grid(True)
-#plt.show()
-
-"""
 
 df = pd.read_csv('data_oblicuo.csv')
 
@@ -164,7 +145,6 @@ axs[1].plot(df['Tiempo (s)'], df['Aceleración Y (m/s^2)'], marker='o')
 axs[1].set_xlabel('Tiempo (s)')
 axs[1].set_ylabel('A_Y (m/s^2)')
 plt.show()
-
 
 # Graficar la velocidad con posiciones suavizadas
 #plt.title('Velocidad de la botella en el eje Y con respecto al tiempo')
