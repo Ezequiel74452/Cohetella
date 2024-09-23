@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from utilsGraficas import *
 import utilsVideo as uv
 import pandas as pd
 from sympy import *
@@ -10,48 +11,56 @@ from scipy.optimize import curve_fit
 ### Cuando se abre el primer frame, hay que seleccionar un área (el cohete) a trackear.
 ### Clickear en una esquina cercana al cohete y mantener para formar el cuadrado.
 ### Luego, enter para confirmar la selección y el trackeo empieza automáticamente.
+### Al finalizar se generara un csv con los datos capturados, y se podra elegir si generar la grafica en el momento.
 
+#colores de las graficas:
+C_POS = 'black'
+C_VEL = 'blue'
+C_ACC = 'red'
+
+#graficar csv o trackear video
+graficar = input("Graficar data.csv o trackear video?(1/2): ")
+if(graficar == "1"):
+    graficar_csv_plotly(C_POS,C_VEL,C_ACC)
+    #graficar_csv_matplot()
+    exit()
 
 # Cargar video
-cap = cv2.VideoCapture('videos/120fps.mp4') 
+videoCapturado = cv2.VideoCapture('videos/120fps.mp4') 
 
-# Constantes útiles
-VID_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-VID_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-PISO = 942 # Calculado a ojo más o menos donde está la base del cohete (eje X)
-ORIGEN = 268 # Calculado a ojo más o menos desde el centro del cohete (eje Y)
-FPS = 120
-
-datos = {'Tiempo (s)':np.array([]),
-        'Posición Y (px)':np.array([])}
-
-df = pd.DataFrame(data=datos)
-
-# Rastreador CSRT
-tracker = cv2.legacy.TrackerCSRT.create()
-
-# Lee el primer fotograma
-ret, frame = cap.read()
+# Revisa que el video sea válido
+ret, primerFrame = videoCapturado.read()
 if not ret:
     print("No se pudo leer el video.")
-    cap.release()
+    videoCapturado.release()
     cv2.destroyAllWindows()
     exit()
 
 
-frame_resized = uv.rescaleFrame(frame, scale=.5)
+# Constantes útiles
+VID_WIDTH = int(videoCapturado.get(cv2.CAP_PROP_FRAME_WIDTH))
+VID_HEIGHT = int(videoCapturado.get(cv2.CAP_PROP_FRAME_HEIGHT))
+PISO = 942 # Calculado a ojo más o menos donde está la base del cohete (eje X)
+ORIGEN = 268 # Calculado a ojo más o menos desde el centro del cohete (eje Y)
+FPS = 120
 
+#dataframe donde se guardan posicion,velocidad y aceleracion
+dataFrame = pd.DataFrame(data= {'Tiempo (s)':np.array([]), 'Posición Y (px)':np.array([])})
+
+# Rastreador CSRT
+tracker = cv2.legacy.TrackerCSRT.create()
+frame_resized = uv.rescaleFrame(primerFrame, scale=.5)
 bbox = cv2.selectROI(frame_resized, False)
 tracker.init(frame_resized, bbox)
 
-frame_number = 0
-
+#comienza a procesar frame por frame:
+frame_nro = 0
 while True:
-    ret, frame = cap.read()
-    if not ret:
+    #captura el proximo frame
+    exito, frame_actual = videoCapturado.read()
+    if not exito:
         break
-
-    frame_resized = uv.rescaleFrame(frame, scale=.5)
+    frame_resized = uv.rescaleFrame(frame_actual, scale=.5)
 
     # Actualizar el rastreador
     success, bbox = tracker.update(frame_resized)
@@ -64,13 +73,12 @@ while True:
         final_y = VID_HEIGHT - PISO - (center_y * 2)
 
         # Calcular el tiempo correspondiente a este fotograma
-        time_elapsed = frame_number / FPS  # Tiempo en segundos
+        time_elapsed = frame_nro / FPS  # Tiempo en segundos
 
-        datos_frame = {'Tiempo (s)':[time_elapsed],
-             'Posición Y (px)':[final_y]}
+        datos_del_frame = {'Tiempo (s)':[time_elapsed], 'Posición Y (px)':[final_y]}
 
-        df_frame = pd.DataFrame(data=datos_frame)
-        df = pd.concat([df, df_frame], ignore_index=True)
+        dataFrameAuxiliar = pd.DataFrame(data=datos_del_frame)
+        dataFrame = pd.concat([dataFrame, dataFrameAuxiliar], ignore_index=True)
 
         print(f"Y: {final_y}, Tiempo: {time_elapsed}")
 
@@ -78,91 +86,45 @@ while True:
         cv2.rectangle(frame_resized, (x, y), (x + w, y + h), (0, 255, 0), 2)
         cv2.circle(frame_resized, (center_x, center_y), 5, (0, 0, 255), -1)
 
-    frame_number += 1
+    frame_nro += 1
 
     # Mostrar el fotograma
     cv2.imshow('Tracking', frame_resized)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-cap.release()
+videoCapturado.release()
 cv2.destroyAllWindows()
 
 #Calcular posición en metros
-df['Posición Y (m)'] = df['Posición Y (px)'].apply(lambda x: uv.fromPixelsToMeters(x))
+dataFrame['Posición Y (m)'] = dataFrame['Posición Y (px)'].apply(lambda x: uv.fromPixelsToMeters(x))
 
 def smooth_positions(positions, window_size=10):
     return np.convolve(positions, np.ones(window_size)/window_size, mode='valid')
 
 # Aumentar el tamaño de la ventana (window_size) para suavizar más
-smoothed_positions = smooth_positions(df['Posición Y (m)'], window_size=10)
-df = df.iloc[:len(smoothed_positions)]
-#df['Posición Y (m)'] = smoothed_positions
+smoothed_positions = smooth_positions(dataFrame['Posición Y (m)'], window_size=10)
+dataFrame = dataFrame.iloc[:len(smoothed_positions)]
+#dataFrame['Posición Y (m)'] = smoothed_positions
+
+periodos =10
 
 # Calcular las velocidades 
-df['Velocidad (m/s)'] = df['Posición Y (m)'].diff(periods=10) / df['Tiempo (s)'].diff(periods=10)	
-df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
+dataFrame['Velocidad (m/s)'] = dataFrame['Posición Y (m)'].diff(periods=periodos) / dataFrame['Tiempo (s)'].diff(periods=periodos)	
+dataFrame['Velocidad (m/s)'] = dataFrame['Velocidad (m/s)'].fillna(0)
 
 #Calcular la aceleración 
-df['Aceleración (m/s^2)'] = df['Velocidad (m/s)'].diff(periods=10) / df['Tiempo (s)'].diff(periods=10)	
-df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
+dataFrame['Aceleración (m/s^2)'] = dataFrame['Velocidad (m/s)'].diff(periods=periodos) / dataFrame['Tiempo (s)'].diff(periods=periodos)	
+dataFrame['Aceleración (m/s^2)'] = dataFrame['Aceleración (m/s^2)'].fillna(0)
 
-print(df)
-df.to_csv('data.csv', index=False)
+#print(dataFrame)
+dataFrame.to_csv('data.csv', index=False)
+graficar = input("CSV generado, graficar ahora?(S/N): ")
+if(graficar == "s"):
+    graficar_csv_plotly(C_POS,C_VEL,C_ACC)
+    #graficar_csv_matplot()
+    exit()
 
-"""
-# Graficar la posición suavizada
-plt.title('Posición de la botella en el tiempo')
-plt.plot(df['Tiempo (s)'], df['Posición Y (m)'], marker='o')
-plt.xlabel('Tiempo (s)')
-plt.ylabel('Posición (m)')
-plt.grid(True)
-plt.show()
-
-# Graficar la velocidad con posiciones suavizadas
-plt.title('Velocidad de la botella en el tiempo')
-plt.plot(df['Tiempo (s)'], df['Velocidad (m/s)'], marker='o')
-plt.xlabel('Tiempo (s)')
-plt.ylabel('Velocidad (m/s)')
-plt.grid(True)
-plt.show()
-
-# Graficar la aceleración con posiciones suavizadas
-plt.title('Aceleración de la botella en el tiempo')
-plt.plot(df['Tiempo (s)'], df['Aceleración (m/s^2)'], marker='o')
-plt.xlabel('Tiempo (s)')
-plt.ylabel('Aceleración (m/s^2)')
-plt.grid(True)
-plt.show()
-"""
-
-
-#Creamos una figura con 3 filas y 1 columna
-fig, axs=plt.subplots(3, 1,figsize=(10, 10))
-
-#Graficamos la posición
-axs[0].plot(df['Tiempo (s)'], df['Posición Y (m)'])
-axs[0].set_title('Posición de la botella en el tiempo')
-axs[0].set_ylabel('Posición (m)')
-axs[0].grid(True)
-
-#Graficamos la velocidad
-axs[1].plot(df['Tiempo (s)'], df['Velocidad (m/s)'], color='green', marker='.')
-axs[1].set_title('Velocidad de la botella en el tiempo')
-axs[1].set_ylabel('Velocidad (m/s)')
-axs[1].grid(True)
-
-#Graficamos la aceleración
-axs[2].plot(df['Tiempo (s)'], df['Aceleración (m/s^2)'], color='orange', marker='.')
-axs[2].set_title('Aceleración de la botella en el tiempo')
-axs[2].set_ylabel('Aceleración (m/s^2)')
-axs[2].set_xlabel('Tiempo (s)')
-axs[2].grid(True)
-
-plt.tight_layout()
-plt.show()
-
-""""
 #Condiciones iniciales de velocidad y posición
 v0 = 0
 y0 = 0
@@ -170,8 +132,7 @@ y0 = 0
 def velocity(t,g,vo):
   return(g*t+vo)
 
-popt, pcov = curve_fit(velocity, xdata = df['Tiempo (s)'], ydata = df['Velocidad (m/s)'], p0 = [9.8, 0])
+popt, pcov = curve_fit(velocity, xdata = dataFrame['Tiempo (s)'], ydata = dataFrame['Velocidad (m/s)'], p0 = [9.8, 0])
 errs = np.sqrt(np.diag(pcov))
 print(popt,errs)
 
-"""
