@@ -13,7 +13,7 @@ from scipy.optimize import curve_fit
 
 
 # Cargar video
-cap = cv2.VideoCapture('videos/justo.mp4') 
+cap = cv2.VideoCapture('videos/120fps.mp4') 
 
 # Constantes útiles
 VID_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -104,7 +104,7 @@ df['Velocidad (m/s)'] = df['Posición Y (m)'].diff(periods=10) / df['Tiempo (s)'
 df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
 
 #Calcular la aceleración 
-df['Aceleración (m/s^2)'] = df['Velocidad (m/s)'].diff(periods=5) / df['Tiempo (s)'].diff(periods=5)	
+df['Aceleración (m/s^2)'] = df['Velocidad (m/s)'].diff(periods=10) / df['Tiempo (s)'].diff(periods=10)	
 df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
 
 print(df)
@@ -162,8 +162,7 @@ axs[2].grid(True)
 plt.tight_layout()
 plt.show()
 
-
-
+""""
 #Condiciones iniciales de velocidad y posición
 v0 = 0
 y0 = 0
@@ -174,3 +173,5 @@ def velocity(t,g,vo):
 popt, pcov = curve_fit(velocity, xdata = df['Tiempo (s)'], ydata = df['Velocidad (m/s)'], p0 = [9.8, 0])
 errs = np.sqrt(np.diag(pcov))
 print(popt,errs)
+
+"""
