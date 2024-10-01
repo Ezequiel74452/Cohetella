@@ -21,9 +21,9 @@ class Main(ctk.CTk):
 																		img_path="img/vertical.png",
 																		restore_func=self.restore_screen,
 																		clear_func=self.clear_screen_and_place)
-		
+
 		self.mainloop()
-	
+
 	def clear_screen_and_place(self, frame):
 		self.ob_frame.grid_forget()
 		self.ve_frame.grid_forget()

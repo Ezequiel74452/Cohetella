@@ -8,18 +8,29 @@ from constants import *
 class GUI(ctk.CTkFrame, ABC):
 	def __init__(self, parent, restore):
 		super().__init__(parent, fg_color= "transparent")
-		
-		#self.grid(column=0, row=0, columnspan=2, sticky="news", padx=20, pady=20)
 
 		self.rowconfigure(0, weight= 1)
 		self.columnconfigure(0, weight= 1, uniform="a")
 		self.columnconfigure(1, weight= 1, uniform="a")
 		self.restore = restore
 		self.close_btn = CloseBtn(parent= self, func= self.close_btn_func)
+		self.vid_input = None
+		self.csv_input = None
 	
 	def close_btn_func(self):
 		self.grid_forget()
 		self.restore()
+	
+	def restore_screen(self):
+		self.vid_input.grid(column= 0, row= 0, columnspan= 1, sticky= "news", padx= 40, pady= 40)
+		self.csv_input.grid(column= 1, row= 0, columnspan= 1, sticky= "news", padx= 40, pady= 40)
+		self.close_btn.place(relx= 0.995, rely= 0.005, anchor= "ne")
+	
+	def clear_screen_and_place(self, frame):
+		self.vid_input.grid_forget()
+		self.csv_input.grid_forget()
+		self.close_btn.place_forget()
+		frame.grid(column= 0, row= 0, columnspan= 2, sticky= "news")
 
 class GUIVertical(GUI):
 	def __init__(self, parent, restore):

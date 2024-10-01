@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from abc import ABC, abstractmethod
+from abc import ABC
 from constants import *
 from img_output import ImageFrameOutput
 from options_gui import GUIVertical, GUIOblique
@@ -12,6 +12,7 @@ class ImageFrame(ctk.CTkFrame, ABC):
 		self.img_path = img_path
 		self.restore = restore_func
 		self.clear = clear_func
+		self.gui = None
 
 		self.rowconfigure(0, weight=0)
 		self.rowconfigure(1, weight=1)
@@ -44,32 +45,29 @@ class ImageFrame(ctk.CTkFrame, ABC):
 		self.img_output.delete("all")
 		self.img_output.create_image(self.canvas_w / 2, self.canvas_h / 2, image=self.img_tk)
 	
-	@abstractmethod
-	def options_gui(self):
-		pass
+	def options_gui(self, _):
+		self.clear(self.gui)
 
 class ImageFrameVertical(ImageFrame):
 	def __init__(self, parent, img_path, restore_func, clear_func):
 		super().__init__(parent, img_path, restore_func, clear_func)
+
 		self.grid(row=0, column=1, columnspan=1, sticky="news", padx=40, pady=40)
+
 		self.label_top = ctk.CTkLabel(self, text= "Tiro vertical",
-												font= ctk.CTkFont(family= "Robot", size= 40, weight= "bold"),
+												font= ctk.CTkFont(family= "Roboto", size= 40, weight= "bold"),
 												text_color= LIGHT_GRAY, fg_color= DARKER_GRAY, bg_color= DARKER_GRAY)
 		self.label_top.grid(row=0, column=0, padx=10, pady=(10, 0))
 		self.gui = GUIVertical(parent, self.restore)
 
-	def options_gui(self, _):
-		self.clear(self.gui)
-
 class ImageFrameOblique(ImageFrame):
 	def __init__(self, parent, img_path, restore_func, clear_func):
 		super().__init__(parent, img_path, restore_func, clear_func)
+
 		self.grid(row=0, column=0, columnspan=1, sticky="news", padx=40, pady=40)
+
 		self.label_top = ctk.CTkLabel(self, text= "Tiro oblicuo",
-												font= ctk.CTkFont(family= "Robot", size= 40, weight= "bold"),
+												font= ctk.CTkFont(family= "Roboto", size= 40, weight= "bold"),
 												text_color= LIGHT_GRAY, fg_color= DARKER_GRAY, bg_color= DARKER_GRAY)
 		self.label_top.grid(row=0, column=0, padx=10, pady=(10, 0))
 		self.gui = GUIOblique(parent, self.restore)
-
-	def options_gui(self, _):
-		self.clear(self.gui)
