@@ -80,9 +80,9 @@ class Container(ctk.CTkFrame, ABC):
 	def draw_cross(self, x, y):
 		self.img_display = self.original_img.copy()
 		draw = ImageDraw.Draw(self.img_display)
-		cross_size = 10
-		draw.line((x - cross_size, y, x + cross_size, y), fill="red", width=2)
-		draw.line((x, y - cross_size, x, y + cross_size), fill="red", width=2)
+		cross_size = 20
+		draw.line((x - cross_size, y, x + cross_size, y), fill="red", width=5)
+		draw.line((x, y - cross_size, x, y + cross_size), fill="red", width=5)
 		self.refresh_img()
 
 	def refresh_img(self):

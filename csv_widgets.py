@@ -5,7 +5,7 @@ import webbrowser
 from abc import ABC, abstractmethod
 from constants import *
 from tkinter import filedialog, messagebox
-from utilsGraficas import graficar_csv_plotly, oblique_graph
+from utilsGraficas import graficar_csv_plotly, graficar_oblique_csv_plotly
 
 class CSVInput(ctk.CTkFrame, ABC):
 	def __init__(self, parent):
@@ -50,5 +50,11 @@ class CSVObliqueInput(CSVInput):
 		super().__init__(parent)
 	
 	def graficar(self, path):
-		df = pd.read_csv(path)
-		oblique_graph(df)
+		path_to_html = graficar_oblique_csv_plotly(path)
+		response = messagebox.askyesno(
+			"Confirmar",
+			"Se ha generado el HTML con éxito ¿Desea abrirlo en el navegador?"
+    )
+		if response:
+			file_url = 'file://' + os.path.abspath(path_to_html).replace('\\', '/')
+			webbrowser.open(file_url)

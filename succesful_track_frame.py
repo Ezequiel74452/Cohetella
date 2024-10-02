@@ -1,7 +1,9 @@
+import webbrowser
 import customtkinter as ctk
 from abc import ABC, abstractmethod
 from constants import *
 from tkinter import messagebox
+import os
 from utilsGraficas import oblique_graph, graficar_plotly
 
 class SuccesfulTrackFrame(ctk.CTkFrame, ABC):
@@ -40,14 +42,19 @@ class SuccesfulTrackFrameVertical(SuccesfulTrackFrame):
 		super().__init__(parent, df)
 
 	def graph(self):
-		graficar_plotly(self.df)
+		path_to_html = graficar_plotly(self.df)
+		file_url = 'file://' + os.path.abspath(path_to_html).replace('\\', '/')
+		webbrowser.open(file_url)
 
 class SuccesfulTrackFrameOblique(SuccesfulTrackFrame):
 	def __init__(self, parent, df):
 		super().__init__(parent, df)
 
 	def graph(self):
-		oblique_graph(self.df)
+		path_to_html = oblique_graph(self.df)
+		file_url = 'file://' + os.path.abspath(path_to_html).replace('\\', '/')
+		webbrowser.open(file_url)
+	
 
 class ButtonFrame(ctk.CTkFrame):
 	def __init__(self, parent, graph, save):
