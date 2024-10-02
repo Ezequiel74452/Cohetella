@@ -18,6 +18,8 @@ COLOR_FUNCION_VELOCIDAD = 'red'
 def graficar_csv_matplot():
     # Leer el archivo CSV
     dataFrame = pd.read_csv('data.csv')
+    
+    #Gráficas antiguas
     # Creamos una figura con 3 filas y 1 columna
     fig, axs = plt.subplots(3, 1, figsize=(10, 10))
     # Graficamos la posición
