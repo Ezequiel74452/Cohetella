@@ -27,7 +27,8 @@ def ajustar_velocidad(dataFrame):
     print(popt, errs)
     
     g_ajustado, v0_ajustado = popt
+    err_g, err_v0 = errs
     
     velocidad_ajustada = velocity(tiempo_ajustado, g_ajustado, v0_ajustado)
     
-    return velocidad_ajustada, tiempo_filtrado
+    return velocidad_ajustada, tiempo_filtrado, g_ajustado, err_g

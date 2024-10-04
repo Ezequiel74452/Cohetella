@@ -47,7 +47,7 @@ def graficar_csv_plotly(path):
   return graficar_plotly(dataFrame)
 
 def graficar_plotly(dataFrame):
-    velocidad_ajustada, tiempo = ajustar_velocidad(dataFrame)
+    velocidad_ajustada, tiempo, g_ajustado, err_g = ajustar_velocidad(dataFrame)
     
     # Crear una figura con subplots
     fig = make_subplots(rows=3, cols=1, 
@@ -104,8 +104,40 @@ def graficar_plotly(dataFrame):
     fig.update_yaxes(title_text="Aceleración (m/s^2)", row=3, col=1)
     fig.update_yaxes(showgrid=True, gridcolor='LightGray')
 
-    # Mostrar la figura en un solo archivo HTML
-    fig.write_html(HTML_VERTICAL_NAME)
+    # Guardar la figura como HTML, sin incluir el script Plotly (lo cargamos desde CDN)
+    #fig.write_html(HTML_VERTICAL_NAME, include_plotlyjs='cdn')
+    
+    # Agregar contenido HTML adicional
+    with open(HTML_VERTICAL_NAME, "w", encoding="utf-8") as f:
+        f.write("<h1>Información obtenida en el trackeo del cohete</h1>")
+        f.write(pio.to_html(fig, full_html=True))
+        f.write("""
+            <style>
+                h1 {
+                    color: #5D6D7E;
+                    font-family: Arial, sans-serif;
+                    margin-top: 40px;
+                    align: center;
+                    justify-content: center;
+                    text-align: center;
+                }
+                h2 {
+                    color: #2E86C1;
+                    font-family: Arial, sans-serif;
+                    margin-left: 40px;
+                }
+                p {
+                    color: #5D6D7E;
+                    font-size: 16px; 
+                    font-family: 'Verdana', sans-serif; 
+                    margin-left: 45px;
+                }
+            </style>
+        """)
+        f.write("<h2>Datos adicionales del lanzamiento</h2>")
+        f.write("<p>La aceleración del lanzamiento calculada al realizar el ajuste de la velocidad es de: " 
+                + str(round(g_ajustado, 2)) + " +/- " + str(round(err_g, 2)) + " m/s<sup>2</sup></p>")
+    
     return HTML_VERTICAL_NAME
 
 def graficar_oblique_csv_plotly(path):
