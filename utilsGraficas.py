@@ -267,27 +267,3 @@ def oblique_graph(df):
         f.write(pio.to_html(figAcc, full_html=False, include_plotlyjs=False))
     
     return HTML_OBLIQUE_NAME
-
-   
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
