@@ -22,6 +22,8 @@ class Main(ctk.CTk):
 																		restore_func=self.restore_screen,
 																		clear_func=self.clear_screen_and_place)
 
+		self.bind('<<RestoreMainScreen>>', self.restore_screen)
+
 		self.mainloop()
 
 	def clear_screen_and_place(self, frame):
@@ -29,7 +31,7 @@ class Main(ctk.CTk):
 		self.ve_frame.grid_forget()
 		frame.grid(row=0, column=0, columnspan=2, sticky="news")
 	
-	def restore_screen(self):
+	def restore_screen(self, _):
 		self.ob_frame.grid(row=0, column=0, columnspan=1, sticky="news", padx=40, pady=40)
 		self.ve_frame.grid(row=0, column=1, columnspan=1, sticky="news", padx=40, pady=40)
 

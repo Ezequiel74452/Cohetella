@@ -19,7 +19,7 @@ class GUI(ctk.CTkFrame, ABC):
 	
 	def close_btn_func(self):
 		self.grid_forget()
-		self.restore()
+		self.event_generate('<<RestoreMainScreen>>', when='tail')
 	
 	def restore_screen(self):
 		self.vid_input.grid(column= 0, row= 0, columnspan= 1, sticky= "news", padx= 40, pady= 40)
