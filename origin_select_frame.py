@@ -29,7 +29,7 @@ class OriginSelect(ctk.CTkFrame):
 		self.img = self.original_img
 		self.img_ratio = self.img.size[0]/self.img.size[1]
 		self.img_tk = ImageTk.PhotoImage(self.img)
-		self.img_output = ImageFrameOutput(self, self.resize_img, self.select_pixel, bg_color="transparent")
+		self.img_output = ImageFrameOutput(self, self.resize_img, self.select_pixel)
 		self.img_output.grid(column= 0, row= 0, columnspan=1, sticky= "news")
 
 	def resize_img(self, event):

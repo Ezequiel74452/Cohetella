@@ -10,8 +10,7 @@ class GUI(ctk.CTkFrame, ABC):
 		super().__init__(parent, fg_color= "transparent")
 
 		self.rowconfigure(0, weight= 1)
-		self.columnconfigure(0, weight= 1, uniform="a")
-		self.columnconfigure(1, weight= 1, uniform="a")
+		self.columnconfigure((0,1), weight= 1, uniform="a")
 		self.restore = restore
 		self.close_btn = CloseBtn(parent= self, func= self.close_btn_func)
 		self.vid_input = None

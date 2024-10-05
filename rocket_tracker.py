@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from constants import *
 from img_frames import ImageFrameOblique, ImageFrameVertical
 
 class Main(ctk.CTk):
@@ -10,15 +11,14 @@ class Main(ctk.CTk):
 		self.minsize(800, 500)
 		
 		self.rowconfigure(0, weight= 1)
-		self.columnconfigure(0, weight= 1, uniform="a")
-		self.columnconfigure(1, weight= 1, uniform="a")
+		self.columnconfigure((0,1), weight= 1, uniform="a")
 		
 		self.ob_frame = ImageFrameOblique(self,
-																		img_path="img/oblique.png",
+																		img_path=OBLIQUE_IMG_PATH,
 																		restore_func=self.restore_screen,
 																		clear_func=self.clear_screen_and_place)
 		self.ve_frame = ImageFrameVertical(self,
-																		img_path="img/vertical.png",
+																		img_path=VERTICAL_IMG_PATH,
 																		restore_func=self.restore_screen,
 																		clear_func=self.clear_screen_and_place)
 

@@ -13,3 +13,6 @@ DROPDOWN_MAIN_COLOR = "#444"
 DROPDOWN_HOVER_COLOR = "#333"
 DROPDOWN_MENU_COLOR = "#666"
 
+#Paths
+OBLIQUE_IMG_PATH = "img/oblique.png"
+VERTICAL_IMG_PATH = "img/vertical.png"
