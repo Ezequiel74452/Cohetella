@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 from utilsCinematica import *
+from otherUtils import alturaMaximaInicio, alturaMaximaFin
 
 pio.renderers.default = 'browser'
 HTML_VERTICAL_NAME = "graficos_vertical.html"
@@ -62,6 +63,20 @@ def graficar_plotly(dataFrame):
         name='Posición (m)',
         line=dict(color=COLOR_POSICION)
     ), row=1, col=1)
+    alturaMaxI = alturaMaximaInicio(dataFrame)
+    alturaMaxF = alturaMaximaFin(dataFrame)
+    fig.add_shape(type='line',
+                  x0=alturaMaxI['Tiempo (s)'],
+                  x1=alturaMaxI['Tiempo (s)'],
+                  y0=dataFrame['Posición Y (m)'].min(),
+                  y1=dataFrame['Posición Y (m)'].max(),
+                  line=dict(color='red', dash='dash'))
+    fig.add_shape(type='line',
+                  x0=alturaMaxF['Tiempo (s)'],
+                  x1=alturaMaxF['Tiempo (s)'],
+                  y0=dataFrame['Posición Y (m)'].min(),
+                  y1=dataFrame['Posición Y (m)'].max(),
+                  line=dict(color='red', dash='dash'))
 
     # Graficar la velocidad
     fig.add_trace(go.Scatter(
@@ -166,6 +181,22 @@ def oblique_graph(df):
         name='Posición y (m)',
         line=dict(color=COLOR_POSICION)
     ), row=2, col=1)
+    alturaMaxI = alturaMaximaInicio(df)
+    alturaMaxF = alturaMaximaFin(df)
+    fig.add_shape(type='line',
+                  x0=alturaMaxI['Tiempo (s)'],
+                  x1=alturaMaxI['Tiempo (s)'],
+                  y0=df['Posición Y (m)'].min(),
+                  y1=df['Posición Y (m)'].max(),
+                  line=dict(color='red', dash='dash'),
+									row=2, col=1)
+    fig.add_shape(type='line',
+                  x0=alturaMaxF['Tiempo (s)'],
+                  x1=alturaMaxF['Tiempo (s)'],
+                  y0=df['Posición Y (m)'].min(),
+                  y1=df['Posición Y (m)'].max(),
+                  line=dict(color='red', dash='dash'),
+									row=2, col=1)
     
     fig.add_trace(go.Scatter(
         x=df['Posición X (m)'],
