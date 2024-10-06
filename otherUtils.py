@@ -23,7 +23,11 @@ def puntoMedioAlturaMaxima(df: pd.DataFrame):
     # Devolver la fila correspondiente al índice medio
     return df.iloc[indice_medio]
 
-def velocidadMaximaInicial(df: pd.DataFrame):
+def calcularVelocidadMaximaInicial(df: pd.DataFrame):
 	vel_max_incial = df['Velocidad (m/s)'].max()
 	return df[df['Velocidad (m/s)'] == vel_max_incial].iloc[-1]
+
+def calcularVelocidadMaximaFinal(df: pd.DataFrame):
+	vel_max_final = df['Velocidad (m/s)'].min()
+	return df[df['Velocidad (m/s)'] == vel_max_final].iloc[-1]
 
