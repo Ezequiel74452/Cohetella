@@ -75,8 +75,7 @@ def graficar_plotly(dataFrame):
     
     
     fig = make_subplots(rows=3, cols=1, 
-                        vertical_spacing=0.1, 
-                        shared_xaxes=True,
+                        vertical_spacing=0.1,
                         subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo"))
     
     graficar_posicion_vertical(fig, 
