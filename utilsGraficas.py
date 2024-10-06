@@ -62,15 +62,15 @@ def graficar_plotly(dataFrame):
     velocidadMaxInicial = calcularVelocidadMaximaInicial(dataFrame)
     
     #Comparación con caida libre desde el punto de altura máxima
-    velocidad_ajustada, tiempo_caida_libre, g_ajustado, err_g = ajustar_velocidad(dataFrame, alturaMaxProm)
+    velocidad_ajustada_CL, tiempo_caida_libre, g_ajustado_CL, err_g_CL = ajustar_velocidad_CL(dataFrame, alturaMaxProm)
     velocidad_caida_libre = calcular_velocidad_caida_libre(dataFrame, alturaMaxProm)   
-    posicion_ajustada = ajustar_posicion(dataFrame, alturaMaxProm, g_ajustado)
+    posicion_ajustada_CL = ajustar_posicion_CL(dataFrame, alturaMaxProm, g_ajustado_CL)
     posicion_caida_libre = calcular_posicion_caida_libre(dataFrame, alturaMaxProm)
     
     #Comparación con tiro vertical desde el punto de máxima velocidad
-    velocidad_ajustada2, tiempo_tiro_vertical, g_ajustado2, err_g2 = ajustar_velocidad_2(dataFrame, velocidadMaxInicial)
+    velocidad_ajustada_TV, tiempo_tiro_vertical, g_ajustado_TV, err_g_TV = ajustar_velocidad_TV(dataFrame, velocidadMaxInicial)
     velocidad_tiro_vertical = calcular_velocidad_tiro_vertical(dataFrame, velocidadMaxInicial)
-    posicion_ajustada2 = ajustar_posicion_2(dataFrame, velocidadMaxInicial, g_ajustado2)
+    posicion_ajustada_TV = ajustar_posicion_TV(dataFrame, velocidadMaxInicial, g_ajustado_TV)
     posicion_tiro_vertical = calcular_posicion_tiro_vertical(dataFrame, velocidadMaxInicial)
     
     
@@ -81,19 +81,19 @@ def graficar_plotly(dataFrame):
     
     graficar_posicion_vertical(fig, 
                                dataFrame, 
-                               posicion_ajustada, 
+                               posicion_ajustada_CL, 
                                posicion_caida_libre, 
                                tiempo_caida_libre,
-                               posicion_ajustada2,
+                               posicion_ajustada_TV,
                                posicion_tiro_vertical, 
                                tiempo_tiro_vertical)
     
     graficar_velocidad_vertical(fig, 
                                 dataFrame, 
-                                velocidad_ajustada, 
+                                velocidad_ajustada_CL, 
                                 velocidad_caida_libre, 
                                 tiempo_caida_libre,
-                                velocidad_ajustada2,
+                                velocidad_ajustada_TV,
                                 velocidad_tiro_vertical, 
                                 tiempo_tiro_vertical)
     
@@ -144,12 +144,14 @@ def graficar_plotly(dataFrame):
             </style>
         """)
         f.write("<h2>Datos adicionales del lanzamiento</h2>")
-        f.write("<p>La aceleración del lanzamiento calculada al realizar el ajuste de la velocidad es de: " 
-                + str(round(g_ajustado, 2)) + " +/- " + str(round(err_g, 2)) + " m/s<sup>2</sup></p>")
+        f.write("<p>La aceleración del lanzamiento calculada al realizar el ajuste de la velocidad en el tramo de caida libre es de: " 
+                + str(round(g_ajustado_CL, 2)) + " +/- " + str(round(err_g_CL, 2)) + " m/s<sup>2</sup></p>")
+        f.write("<p>La aceleración del lanzamiento calculada al realizar el ajuste de la velocidad en el tramo de tiro vertical es de: " 
+                + str(round(g_ajustado_TV, 2)) + " +/- " + str(round(err_g_TV, 2)) + " m/s<sup>2</sup></p>")
     
     return HTML_VERTICAL_NAME
 
-def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada, posicion_caida_libre, tiempo_caida_libre, posicion_ajustada2, posicion_tiro_vertical, tiempo_tiro_vertical):
+def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada_CL, posicion_caida_libre, tiempo_caida_libre, posicion_ajustada_TV, posicion_tiro_vertical, tiempo_tiro_vertical):
     alturaMaxI = alturaMaximaInicio(dataFrame)
     alturaMaxF = alturaMaximaFin(dataFrame)
     
@@ -166,9 +168,9 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada, posicion_caida
     
     fig.add_trace(go.Scatter(
         x=tiempo_caida_libre,
-        y=posicion_ajustada,
+        y=posicion_ajustada_CL,
         mode='lines',
-        name='Posición ajustada (m)',
+        name='Posición ajustada (CL)',
         line=dict(color=COLOR_FUNCION_POSICION_1, dash='dash'),
         showlegend=True,
         legendgroup='1', 
@@ -179,7 +181,7 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada, posicion_caida
         x=tiempo_caida_libre,
         y=posicion_caida_libre,
         mode='lines',
-        name='Posición caida libre (m)',
+        name='Posición caida libre',
         line=dict(color=COLOR_POSICION_CAIDA_LIBRE, dash='dash'),
         showlegend=True,
         legendgroup='1',
@@ -188,9 +190,9 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada, posicion_caida
     
     fig.add_trace(go.Scatter(
         x=tiempo_tiro_vertical,
-        y=posicion_ajustada2,
+        y=posicion_ajustada_TV,
         mode='lines',
-        name='Posición ajustada 2 (m)',
+        name='Posición ajustada (TV)',
         line=dict(color=COLOR_FUNCION_POSICION_2, dash='dash'),
         showlegend=True,
         legendgroup='1',
@@ -201,7 +203,7 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada, posicion_caida
         x=tiempo_tiro_vertical,
         y=posicion_tiro_vertical,
         mode='lines',
-        name='Posición tiro vertical (m)',
+        name='Posición tiro vertical',
         line=dict(color=COLOR_POSICION_TIRO_VERTICAL, dash='dash'),
         showlegend=True,
         legendgroup='1',
@@ -222,7 +224,7 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada, posicion_caida
                   y1=dataFrame['Posición Y (m)'].max(),
                   line=dict(color='red', dash='dash'))
     
-def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada, velocidad_caida_libre, tiempo_caida_libre, velocidad_ajustada2, velocidad_tiro_vertical, tiempo_tiro_vertical):
+def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad_caida_libre, tiempo_caida_libre, velocidad_ajustada_TV, velocidad_tiro_vertical, tiempo_tiro_vertical):
     
     # Graficar la velocidad
     fig.add_trace(go.Scatter(
@@ -238,9 +240,9 @@ def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada, velocidad_ca
     #Graficar la velocidad ajustada en el intervalo de caida libre
     fig.add_trace(go.Scatter(
         x=tiempo_caida_libre,
-        y=velocidad_ajustada,
+        y=velocidad_ajustada_CL,
         mode='lines',
-        name='Velocidad ajustada (m/s)',
+        name='Velocidad ajustada (CL)',
         line=dict(color=COLOR_FUNCION_VELOCIDAD_1, dash='dash'),
         legendgroup='2',
         visible='legendonly' 
@@ -251,7 +253,7 @@ def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada, velocidad_ca
         x=tiempo_caida_libre,
         y=velocidad_caida_libre,
         mode='lines',
-        name='Velocidad de caida libre (m/s)',
+        name='Velocidad de caida libre',
         line=dict(color=COLOR_VELOCIDAD_CAIDA_LIBRE, dash='dash'),
         legendgroup='2',
         visible='legendonly'  
@@ -260,9 +262,9 @@ def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada, velocidad_ca
     #Graficar la velocidad ajustada en el intervalo de tiro vertical
     fig.add_trace(go.Scatter(
         x=tiempo_tiro_vertical,
-        y=velocidad_ajustada2,
+        y=velocidad_ajustada_TV,
         mode='lines',
-        name='Velocidad ajustada (m/s)',
+        name='Velocidad ajustada (TV)',
         line=dict(color=COLOR_FUNCION_VELOCIDAD_2, dash='dash'),
         legendgroup='2',
         visible='legendonly' 
@@ -273,7 +275,7 @@ def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada, velocidad_ca
         x=tiempo_tiro_vertical,
         y=velocidad_tiro_vertical,
         mode='lines',
-        name='Velocidad de tiro vertical (m/s)',
+        name='Velocidad de tiro vertical',
         line=dict(color=COLOR_VELOCIDAD_TIRO_VERTICAL, dash='dash'),
         legendgroup='2',
         visible='legendonly'  

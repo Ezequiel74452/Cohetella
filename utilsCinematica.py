@@ -25,7 +25,7 @@ def velocity_tiro_vertical(t, v0):
 def position_tiro_vertical(t, y0, v0):
     return y0 + v0 * t - 0.5 * 9.81 * t**2
     
-def ajustar_velocidad(dataFrame, dfPtoMaximo):
+def ajustar_velocidad_CL(dataFrame, dfPtoMaximo):
     
     tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
     
@@ -57,7 +57,7 @@ def calcular_velocidad_caida_libre(dataFrame, dfPtoMaximo):
     velocidad_caida = velocity_caida_libre(tiempo_ajustado)
     return velocidad_caida
 
-def ajustar_posicion(dataFrame, dfPtoMaximo, g_ajustado):
+def ajustar_posicion_CL(dataFrame, dfPtoMaximo, g_ajustado):
     tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
     altura_maxima = dfPtoMaximo['Posición Y (m)']
     tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL)]
@@ -75,7 +75,7 @@ def calcular_posicion_caida_libre(dataFrame, dfPtoMaximo):
     posicion_caida = posicion_caida[posicion_caida > 0]
     return posicion_caida
 
-def ajustar_velocidad_2(dataFrame, dfVelMaxima):
+def ajustar_velocidad_TV(dataFrame, dfVelMaxima):
     tiempo_vel_maxima = dfVelMaxima['Tiempo (s)']
     vel_maxima = dfVelMaxima['Velocidad (m/s)']
     
@@ -108,7 +108,7 @@ def calcular_velocidad_tiro_vertical(dataFrame, dfVelMaxima):
     velocidad_tiro_vertical = velocity_tiro_vertical(tiempo_ajustado, vel_maxima)
     return velocidad_tiro_vertical
     
-def ajustar_posicion_2(dataFrame, dfVelMaxima, g_ajustado):
+def ajustar_posicion_TV(dataFrame, dfVelMaxima, g_ajustado):
     tiempo_vel_maxima = dfVelMaxima['Tiempo (s)']
     vel_maxima = dfVelMaxima['Velocidad (m/s)']
     altura_inicial = dfVelMaxima['Posición Y (m)']
