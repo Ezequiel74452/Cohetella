@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 from utilsCinematica import *
-from otherUtils import alturaMaximaInicio, alturaMaximaFin
+from otherUtils import *
 
 pio.renderers.default = 'browser'
 HTML_VERTICAL_NAME = "graficos_vertical.html"
@@ -12,12 +12,14 @@ HTML_OBLIQUE_NAME = "graficos_oblicuo.html"
 COLOR_POSICION = 'black'
 COLOR_VELOCIDAD = 'blue'
 COLOR_ACELERACION = 'red'
-COLOR_FUNCION_POSICION = 'green'
-COLOR_TIROV_POSICION = 'orange'
+COLOR_FUNCION_POSICION = 'orange'
 COLOR_FUNCION_VELOCIDAD = 'red'
+COLOR_VELOCIDAD_CAIDA_LIBRE = 'green'
+COLOR_POSICION_CAIDA_LIBRE = 'green'
 
 def graficar_csv_matplot():
     # Leer el archivo CSV
+
     dataFrame = pd.read_csv('data.csv')
     
     #Gráficas antiguas
@@ -48,7 +50,15 @@ def graficar_csv_plotly(path):
   return graficar_plotly(dataFrame)
 
 def graficar_plotly(dataFrame):
-    velocidad_ajustada, tiempo, g_ajustado, err_g = ajustar_velocidad(dataFrame)
+    alturaMaxI = alturaMaximaInicio(dataFrame)
+    alturaMaxF = alturaMaximaFin(dataFrame)
+    alturaMaxProm = puntoMedioAlturaMaxima(dataFrame)
+    
+    velocidad_ajustada, tiempo, g_ajustado, err_g = ajustar_velocidad(dataFrame, alturaMaxProm)
+    velocidad_caida_libre = calcular_velocidad_caida_libre(dataFrame, alturaMaxProm)
+    
+    posicion_ajustada = ajustar_posicion(dataFrame, alturaMaxProm, g_ajustado)
+    posicion_caida_libre = calcular_posicion_caida_libre(dataFrame, alturaMaxProm)
     
     # Crear una figura con subplots
     fig = make_subplots(rows=3, cols=1, 
@@ -63,8 +73,24 @@ def graficar_plotly(dataFrame):
         name='Posición (m)',
         line=dict(color=COLOR_POSICION)
     ), row=1, col=1)
-    alturaMaxI = alturaMaximaInicio(dataFrame)
-    alturaMaxF = alturaMaximaFin(dataFrame)
+    
+    fig.add_trace(go.Scatter(
+        x=tiempo,
+        y=posicion_ajustada,
+        mode='lines',
+        name='Posición ajustada (m)',
+        line=dict(color=COLOR_FUNCION_POSICION, dash='dash') 
+    ), row=1, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=tiempo,
+        y=posicion_caida_libre,
+        mode='lines',
+        name='Posición caida libre (m)',
+        line=dict(color=COLOR_POSICION_CAIDA_LIBRE, dash='dash') 
+    ), row=1, col=1)
+    
+    
     fig.add_shape(type='line',
                   x0=alturaMaxI['Tiempo (s)'],
                   x1=alturaMaxI['Tiempo (s)'],
@@ -87,15 +113,23 @@ def graficar_plotly(dataFrame):
         line=dict(color=COLOR_VELOCIDAD)
     ), row=2, col=1)
     
-    #Graficar la funcion velocidad
+    #Graficar la velocidad ajustada
     fig.add_trace(go.Scatter(
-    x=tiempo,
-    y=velocidad_ajustada,
-    mode='lines',
-    name='Velocidad ajustada (m/s)',
-    line=dict(color=COLOR_FUNCION_VELOCIDAD, dash='dash')  # Línea punteada
+        x=tiempo,
+        y=velocidad_ajustada,
+        mode='lines',
+        name='Velocidad ajustada (m/s)',
+        line=dict(color=COLOR_FUNCION_VELOCIDAD, dash='dash') 
     ), row=2, col=1)
     
+    #Graficar la velocidad esperada de una caida libre
+    fig.add_trace(go.Scatter(
+        x=tiempo,
+        y=velocidad_caida_libre,
+        mode='lines',
+        name='Velocidad de caida libre (m/s)',
+        line=dict(color=COLOR_VELOCIDAD_CAIDA_LIBRE, dash='dash')  
+    ), row=2, col=1)
 
     # Graficar la aceleración
     fig.add_trace(go.Scatter(
