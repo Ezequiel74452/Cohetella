@@ -143,6 +143,9 @@ def vertical_track(path, origen_y, origen_x, fps):
 		dataFrame = uv.suavizar_df_vertical(dataFrame)
 		dataFrame = uv.calcular_velocidad_vertical(dataFrame)
 		dataFrame = uv.calcular_aceleracion_vertical(dataFrame)
+		dataFrame = uv.calcular_masa_vertical(dataFrame)
+		dataFrame = uv.calcular_cantidad_movimiento(dataFrame)
+		dataFrame = uv.calcular_fuerza(dataFrame)
 
 		return dataFrame
 	
