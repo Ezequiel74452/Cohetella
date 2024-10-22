@@ -28,6 +28,9 @@ COLOR_MASA = 'blue'
 COLOR_CANTIDAD_MOVIMIENTO = 'red'
 COLOR_FUERZA = 'orange'
 
+COLOR_ENERGIA_POTENCIAL = 'red'
+COLOR_ENERGIA_CINETICA = 'blue'
+COLOR_ENERGIA_MECANICA = 'green'
 
 def graficar_csv_matplot():
     # Leer el archivo CSV
@@ -79,9 +82,9 @@ def graficar_plotly(dataFrame):
     posicion_tiro_vertical = calcular_posicion_tiro_vertical(dataFrame, velocidadMaxInicial)
     
     
-    fig = make_subplots(rows=6, cols=1, 
+    fig = make_subplots(rows=7, cols=1, 
                         vertical_spacing=0.05,
-                        subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo", "Masa en el tiempo", "Cant. de Movimiento en el tiempo", "Fuerza en el tiempo"))
+                        subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo", "Masa en el tiempo", "Cant. de Movimiento en el tiempo", "Fuerza en el tiempo", "Energía en el tiempo"))
     
     graficar_posicion_vertical(fig, 
                                dataFrame, 
@@ -109,9 +112,10 @@ def graficar_plotly(dataFrame):
     
     graficar_fuerza(fig, dataFrame)
     
+    graficar_energia(fig, dataFrame)
     
     fig.update_layout(
-        height=2400, # altura del gráfico
+        height=2800, # altura del gráfico
         title='Datos de la botella en el tiempo',
         legend_tracegroupgap=320
     )
@@ -125,6 +129,7 @@ def graficar_plotly(dataFrame):
     fig.update_yaxes(title_text="Masa (kg)", row=4, col=1)
     fig.update_yaxes(title_text="Cant. de Movimiento (kg*m/s)", row=5, col=1)
     fig.update_yaxes(title_text="Fuerza (N)", row=6, col=1)
+    fig.update_yaxes(title_text="Energía (J)", row=7, col=1)
     fig.update_yaxes(showgrid=True, gridcolor='LightGray')
     
     # Guardar la figura como HTML, sin incluir el script Plotly (lo cargamos desde CDN)
@@ -341,6 +346,37 @@ def graficar_fuerza(fig, dataFrame):
         legendgroup='6'
     ),row=6, col=1)
 
+def graficar_energia(fig, dataFrame):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Energia Cinetica (J)'],
+        mode='lines',
+        name='Energía cinetica (J)',
+        line=dict(color=COLOR_ENERGIA_CINETICA),
+        legendgrouptitle_text='Energía',
+        legendgroup='7'
+    ),row=7, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Energia Potencial (J)'],
+        mode='lines',
+        name='Energía potencial (J)',
+        line=dict(color=COLOR_ENERGIA_POTENCIAL),
+        legendgrouptitle_text='Energía',
+        legendgroup='7'
+    ),row=7, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Energia Mecanica (J)'],
+        mode='lines',
+        name='Energía Mecánica (J)',
+        line=dict(color=COLOR_ENERGIA_MECANICA),
+        legendgrouptitle_text='Energía',
+        legendgroup='7'
+    ),row=7, col=1)
+    
 
 def graficar_oblique_csv_plotly(path):
   dataFrame = pd.read_csv(path)

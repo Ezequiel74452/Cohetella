@@ -95,7 +95,6 @@ def calcular_aceleracion_oblicuo(df):
   return df
 
 def calcular_masa_vertical(df):
-    
     # Calcular las masas con respecto al tiempo ajustado
     df['Masa (kg)'] = masaConRespectoAlTiempo(df['Tiempo (s)'])    
     # Reemplazar NaN en las filas que no tienen valores de masa por 0
@@ -111,4 +110,16 @@ def calcular_fuerza(df):
   df['diferencia_tiempoCM'] = df['Tiempo (s)'].shift(-3) - df['Tiempo (s)'].shift(3)
   df['Fuerza (N)'] = df['diferencia_cantidad_movimiento'] / df['diferencia_tiempoCM']
   df['Fuerza (N)'] = df['Fuerza (N)'].fillna(0)
+  return df
+
+def calcular_energia_cinetica(df):
+  df['Energia Cinetica (J)'] = 0.5 * df['Masa (kg)'] * df['Velocidad (m/s)']**2
+  return df
+
+def calcular_energia_potencial(df):
+  df['Energia Potencial (J)'] = df['Masa (kg)'] * 9.81 * df['Posición Y (m)']
+  return df
+
+def calcular_energia_mecanica(df):
+  df['Energia Mecanica (J)'] = df['Energia Cinetica (J)'] + df['Energia Potencial (J)']
   return df
