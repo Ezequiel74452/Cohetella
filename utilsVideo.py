@@ -6,7 +6,7 @@ PX_TO_CM_OBLICUO = 0.9047
 TIEMPO_LANZAMIENTO = 0.475
 TIEMPO_ALTURA_MAXIMA = 1.225
 TIEMPO_ENTRE_LANZ_ALTMAX = 1.225 - 0.475
-
+TIEMPO_DEJA_AGUA_CTE=0.675
 def rescaleFrame(frame, scale=0.75):
   width = frame.shape[1] * scale
   height = frame.shape[0] * scale
@@ -21,11 +21,11 @@ def fromPixelsToMetersOblicuo(x):
 
 def masaConRespectoAlTiempo(t):
     # Calcular la pendiente de disminución de la masa
-    pendiente = (0.03 - 0.73) / (TIEMPO_ALTURA_MAXIMA - TIEMPO_LANZAMIENTO)
+    pendiente = (0.03 - 0.73) / (TIEMPO_DEJA_AGUA_CTE - TIEMPO_LANZAMIENTO)
     
     # Utilizar np.where para hacer comparaciones vectorizadas con los tiempos dados
     return np.where(t < TIEMPO_LANZAMIENTO, 0.73,  # Antes del lanzamiento
-                    np.where(t > TIEMPO_ALTURA_MAXIMA, 0.03,  # Después de la altura máxima
+                    np.where(t > TIEMPO_DEJA_AGUA_CTE, 0.03,  # Después de la altura máxima
                              0.73 + pendiente * (t - TIEMPO_LANZAMIENTO)))  # Durante el ascenso
 
 def smooth_positions(positions, window_size=10):
