@@ -56,6 +56,110 @@ def graficar_csv_plotly(path):
   dataFrame = pd.read_csv(path)
   return graficar_plotly(dataFrame)
 
+def graficar_plotly_oblique(dataFrame):
+	
+	# Comparación con tiro oblicuo desde el punto de máxima velocidad
+	velocidad_ajustada_x, tiempo_x, g_ajustado_x, err_g_x = ajustar_velocidad_oblique_x(dataFrame)
+	velocidad_x = calcular_velocidad_oblique_x(dataFrame)
+	velocidad_ajustada_y, tiempo_y, g_ajustado_y, err_g_y = ajustar_velocidad_oblique_y(dataFrame)
+	velocidad_y = calcular_velocidad_oblique_y(dataFrame)
+
+	posicion_ajustada_x = ajustar_posicion_oblique_x(dataFrame, g_ajustado_x)
+	posicion_x = calcular_posicion_oblique_x(dataFrame)
+	posicion_ajustada_y = ajustar_posicion_oblique_y(dataFrame, g_ajustado_y)
+	posicion_y = calcular_posicion_oblique_y(dataFrame)
+
+	fig = make_subplots(rows=6, cols=1, 
+											vertical_spacing=0.05,
+											subplot_titles=("Posición X en el tiempo",
+																			"Posición Y en el tiempo",
+																			"Velocidad X en el tiempo",
+																			"Velocidad Y en el tiempo",
+																			"Aceleración X en el tiempo",
+																			"Aceleración Y en el tiempo"))
+  
+	graficar_posicion_oblique_x(fig, 
+														dataFrame, 
+														posicion_ajustada_x,
+														posicion_x,
+														tiempo_x)
+
+	graficar_posicion_oblique_y(fig, 
+														dataFrame, 
+														posicion_ajustada_y, 
+														posicion_y,
+														tiempo_y)
+
+	graficar_velocidad_oblique_x(fig, 
+															dataFrame, 
+															velocidad_ajustada_x, 
+															velocidad_x, 
+															tiempo_x)
+
+	graficar_velocidad_oblique_y(fig, 
+															dataFrame, 
+															velocidad_ajustada_y, 
+															velocidad_y, 
+															tiempo_y)
+
+	graficar_aceleracion_oblique(fig, dataFrame)
+
+	fig.update_layout(
+        height=2400, # altura del gráfico
+        title='Datos de la botella en el tiempo',
+        legend_tracegroupgap=260
+	)
+	fig.update_layout(legend=dict(groupclick="toggleitem"))
+		
+	fig.update_xaxes(showgrid=True, gridcolor='LightGray')
+	fig.update_xaxes(title_text="Tiempo (s)")
+	fig.update_yaxes(title_text="Posición X (m)", row=1, col=1)
+	fig.update_yaxes(title_text="Posición Y (m)", row=2, col=1)
+	fig.update_yaxes(title_text="Velocidad X (m/s)", row=3, col=1)
+	fig.update_yaxes(title_text="Velocidad Y (m/s)", row=4, col=1)
+	fig.update_yaxes(title_text="Aceleración X (m/s^2)", row=5, col=1)
+	fig.update_yaxes(title_text="Aceleración Y (m/s^2)", row=6, col=1)
+	fig.update_yaxes(showgrid=True, gridcolor='LightGray')
+	
+	# Guardar la figura como HTML, sin incluir el script Plotly (lo cargamos desde CDN)
+	#fig.write_html(HTML_VERTICAL_NAME, include_plotlyjs='cdn')
+	
+	# Agregar contenido HTML adicional
+	with open(HTML_OBLIQUE_NAME, "w", encoding="utf-8") as f:
+			f.write("<h1>Información obtenida en el trackeo del cohete</h1>")
+			f.write(pio.to_html(fig, full_html=True))
+			f.write("""
+					<style>
+							h1 {
+									color: #5D6D7E;
+									font-family: Arial, sans-serif;
+									margin-top: 40px;
+									align: center;
+									justify-content: center;
+									text-align: center;
+							}
+							h2 {
+									color: #2E86C1;
+									font-family: Arial, sans-serif;
+									margin-left: 40px;
+							}
+							p {
+									color: #5D6D7E;
+									font-size: 16px; 
+									font-family: 'Verdana', sans-serif; 
+									margin-left: 45px;
+							}
+					</style>
+			""")
+			f.write("<h2>Datos adicionales del lanzamiento</h2>")
+			f.write("<p>La aceleración del lanzamiento calculada al realizar el ajuste de la velocidad en el eje X es de: " 
+							+ str(round(g_ajustado_x, 2)) + " +/- " + str(round(err_g_x, 2)) + " m/s<sup>2</sup></p>")
+			f.write("<p>La aceleración del lanzamiento calculada al realizar el ajuste de la velocidad en el eje Y es de: " 
+							+ str(round(g_ajustado_y, 2)) + " +/- " + str(round(err_g_y, 2)) + " m/s<sup>2</sup></p>")
+	
+	return HTML_OBLIQUE_NAME
+
+
 def graficar_plotly(dataFrame):
     
     alturaMaxProm = puntoMedioAlturaMaxima(dataFrame)
@@ -79,13 +183,13 @@ def graficar_plotly(dataFrame):
                         subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo"))
     
     graficar_posicion_vertical(fig, 
-                               dataFrame, 
-                               posicion_ajustada_CL, 
-                               posicion_caida_libre, 
-                               tiempo_caida_libre,
-                               posicion_ajustada_TV,
-                               posicion_tiro_vertical, 
-                               tiempo_tiro_vertical)
+															dataFrame, 
+															posicion_ajustada_CL, 
+															posicion_caida_libre, 
+															tiempo_caida_libre,
+															posicion_ajustada_TV,
+															posicion_tiro_vertical, 
+															tiempo_tiro_vertical)
     
     graficar_velocidad_vertical(fig, 
                                 dataFrame, 
@@ -222,7 +326,75 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada_CL, posicion_ca
                   y0=dataFrame['Posición Y (m)'].min(),
                   y1=dataFrame['Posición Y (m)'].max(),
                   line=dict(color='red', dash='dash'))
+
+def graficar_posicion_oblique_y(fig, dataFrame, posicion_ajustada_y, posicion_y, tiempo_y):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Posición Y (m)'],
+        mode='lines',
+        name='Posición Y (m)',
+        line=dict(color=COLOR_POSICION),
+        showlegend=True,
+        legendgroup='2',
+        legendgrouptitle_text='Posiciones Y'
+    ),row=2, col=1)
     
+    fig.add_trace(go.Scatter(
+        x=tiempo_y,
+        y=posicion_ajustada_y,
+        mode='lines',
+        name='Posición Y ajustada',
+        line=dict(color=COLOR_FUNCION_POSICION_1, dash='dash'),
+        showlegend=True,
+        legendgroup='2',
+				visible='legendonly' 
+    ),row=2, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=tiempo_y,
+        y=posicion_y,
+        mode='lines',
+        name='Posición Y teórica',
+        line=dict(color=COLOR_POSICION_CAIDA_LIBRE, dash='dash'),
+        showlegend=True,
+        legendgroup='2',
+        visible='legendonly' 
+    ),row=2, col=1)
+
+def graficar_posicion_oblique_x(fig, dataFrame, posicion_ajustada_x, posicion_x, tiempo_x):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Posición X (m)'],
+        mode='lines',
+        name='Posición X (m)',
+        line=dict(color=COLOR_POSICION),
+        showlegend=True,
+        legendgroup='1',
+        legendgrouptitle_text='Posiciones X'
+    ),row=1, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=tiempo_x,
+        y=posicion_ajustada_x,
+        mode='lines',
+        name='Posición X ajustada',
+        line=dict(color=COLOR_FUNCION_POSICION_1, dash='dash'),
+        showlegend=True,
+        legendgroup='1', 
+        visible='legendonly'
+    ),row=1, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=tiempo_x,
+        y=posicion_x,
+        mode='lines',
+        name='Posición X teórica',
+        line=dict(color=COLOR_POSICION_CAIDA_LIBRE, dash='dash'),
+        showlegend=True,
+        legendgroup='1',
+        visible='legendonly' 
+    ),row=1, col=1)
+
 def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad_caida_libre, tiempo_caida_libre, velocidad_ajustada_TV, velocidad_tiro_vertical, tiempo_tiro_vertical):
     
     # Graficar la velocidad
@@ -280,7 +452,76 @@ def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad
         visible='legendonly'  
     ),row=2, col=1)
     
+def graficar_velocidad_oblique_x(fig, dataFrame, velocidad_ajustada_x, velocidad_x, tiempo_x):
     
+    # Graficar la velocidad
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Velocidad X (m/s)'],
+        mode='lines',
+        name='Velocidad X (m/s)',
+        line=dict(color=COLOR_VELOCIDAD),
+        legendgroup='3',
+        legendgrouptitle_text='Velocidades X'
+    ),row=3, col=1)
+
+    #Graficar la velocidad ajustada en el intervalo de caida libre
+    fig.add_trace(go.Scatter(
+        x=tiempo_x,
+        y=velocidad_ajustada_x,
+        mode='lines',
+        name='Velocidad X ajustada',
+        line=dict(color=COLOR_FUNCION_VELOCIDAD_1, dash='dash'),
+        legendgroup='3',
+        visible='legendonly' 
+    ),row=3, col=1)
+    
+    #Graficar la velocidad esperada de una caida libre
+    fig.add_trace(go.Scatter(
+        x=tiempo_x,
+        y=velocidad_x,
+        mode='lines',
+        name='Velocidad X teórica',
+        line=dict(color=COLOR_VELOCIDAD_CAIDA_LIBRE, dash='dash'),
+        legendgroup='3',
+        visible='legendonly'  
+    ),row=3, col=1)
+    
+def graficar_velocidad_oblique_y(fig, dataFrame, velocidad_ajustada_y, velocidad_y, tiempo_y):
+    
+    # Graficar la velocidad
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Velocidad Y (m/s)'],
+        mode='lines',
+        name='Velocidad Y (m/s)',
+        line=dict(color=COLOR_VELOCIDAD),
+        legendgroup='4',
+        legendgrouptitle_text='Velocidades Y'
+    ),row=4, col=1)
+    
+    #Graficar la velocidad ajustada en el intervalo de caida libre
+    fig.add_trace(go.Scatter(
+        x=tiempo_y,
+        y=velocidad_ajustada_y,
+        mode='lines',
+        name='Velocidad Y ajustada',
+        line=dict(color=COLOR_FUNCION_VELOCIDAD_1, dash='dash'),
+        legendgroup='4',
+        visible='legendonly' 
+    ),row=4, col=1)
+    
+    #Graficar la velocidad esperada de una caida libre
+    fig.add_trace(go.Scatter(
+        x=tiempo_y,
+        y=velocidad_y,
+        mode='lines',
+        name='Velocidad Y teórica',
+        line=dict(color=COLOR_VELOCIDAD_CAIDA_LIBRE, dash='dash'),
+        legendgroup='4',
+        visible='legendonly'  
+    ),row=4, col=1)
+
 def graficar_aceleracion_vertical(fig, dataFrame):
     # Graficar la velocidad
     fig.add_trace(go.Scatter(
@@ -294,9 +535,30 @@ def graficar_aceleracion_vertical(fig, dataFrame):
     ),row=3, col=1)
 
 
+def graficar_aceleracion_oblique(fig, dataFrame):
+    # Graficar la velocidad
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Aceleración X (m/s^2)'],
+        mode='lines',
+        name='Aceleración X (m/s^2)',
+        line=dict(color=COLOR_ACELERACION),
+        legendgrouptitle_text='Aceleración X',
+        legendgroup='5'
+    ),row=5, col=1)
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Aceleración Y (m/s^2)'],
+        mode='lines',
+        name='Aceleración y (m/s^2)',
+        line=dict(color=COLOR_ACELERACION),
+        legendgrouptitle_text='Aceleración Y',
+        legendgroup='6'
+    ), row=6, col=1)
+
 def graficar_oblique_csv_plotly(path):
   dataFrame = pd.read_csv(path)
-  return oblique_graph(dataFrame)
+  return graficar_plotly_oblique(dataFrame)
 
 def oblique_graph(df):
     # Crear una figura con subplots para la posición

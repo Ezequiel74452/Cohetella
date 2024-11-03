@@ -27,7 +27,18 @@ def calcularVelocidadMaximaInicial(df: pd.DataFrame):
 	vel_max_incial = df['Velocidad (m/s)'].max()
 	return df[df['Velocidad (m/s)'] == vel_max_incial].iloc[-1]
 
+def calcularVelocidadMaximaInicialObliqueX(df: pd.DataFrame):
+	vel_max_incial = df['Velocidad X (m/s)'].max()
+	return df[df['Velocidad X (m/s)'] == vel_max_incial].iloc[-1]
+
+def calcularVelocidadMaximaInicialObliqueY(df: pd.DataFrame):
+	vel_max_incial = df['Velocidad Y (m/s)'].max()
+	return df[df['Velocidad Y (m/s)'] == vel_max_incial].iloc[-1]
+
 def calcularVelocidadMaximaFinal(df: pd.DataFrame):
 	vel_max_final = df['Velocidad (m/s)'].min()
 	return df[df['Velocidad (m/s)'] == vel_max_final].iloc[-1]
 
+def calcularVelocidadMaximaFinalOblique(df: pd.DataFrame):
+	vel_max_final = df['Velocidad Y (m/s)'].min()
+	return df[df['Velocidad Y (m/s)'] == vel_max_final].iloc[-1]
