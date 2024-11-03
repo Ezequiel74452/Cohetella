@@ -149,6 +149,7 @@ def vertical_track(path, origen_y, origen_x, fps):
 		dataFrame = uv.calcular_energia_cinetica(dataFrame)
 		dataFrame = uv.calcular_energia_potencial(dataFrame)
 		dataFrame = uv.calcular_energia_mecanica(dataFrame)
+		dataFrame = uv.calcular_rozamiento_viscoso(dataFrame)
 
 		return dataFrame
 	

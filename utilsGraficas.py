@@ -186,9 +186,9 @@ def graficar_plotly(dataFrame):
     posicion_tiro_vertical = calcular_posicion_tiro_vertical(dataFrame, velocidadMaxInicial)
     
     
-    fig = make_subplots(rows=8, cols=1, 
+    fig = make_subplots(rows=9, cols=1, 
                         vertical_spacing=0.05,
-                        subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo", "Masa en el tiempo", "Cant. de Movimiento en el tiempo", "Fuerza en el tiempo", "Energía en el tiempo", "Energía en la altura"))
+                        subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo", "Masa en el tiempo", "Cant. de Movimiento en el tiempo", "Fuerza en el tiempo", "Energía en el tiempo", "Energía en la altura", "Rozamiento con el aire"))
     
     graficar_posicion_vertical(fig, 
 															dataFrame, 
@@ -219,14 +219,15 @@ def graficar_plotly(dataFrame):
     graficar_energia(fig, dataFrame)
     
     graficar_energia_altura(fig, dataFrame)
+
+    graficar_rozamiento_con_aire(fig, dataFrame)
     
     fig.update_layout(
-        height=3200, # altura del gráfico
+        height=3600, # altura del gráfico
         title='Datos de la botella en el tiempo',
         legend_tracegroupgap=320
     )
     fig.update_layout(legend=dict(groupclick="toggleitem"))
-     
     fig.update_xaxes(showgrid=True, gridcolor='LightGray')
     fig.update_xaxes(title_text="Tiempo (s)")
     fig.update_yaxes(title_text="Posición (m)", row=1, col=1)
@@ -238,6 +239,8 @@ def graficar_plotly(dataFrame):
     fig.update_yaxes(title_text="Energía (J)", row=7, col=1)
     fig.update_yaxes(title_text="Energía (J)", row=8, col=1)
     fig.update_xaxes(title_text="Posición Y (m)", row=8, col=1)
+    fig.update_yaxes(title_text="Rozamiento viscoso", row=9, col=1)
+    fig.update_xaxes(title_text="Velocidad (m/s)", row=9, col=1)
     fig.update_yaxes(showgrid=True, gridcolor='LightGray')
     
     # Guardar la figura como HTML, sin incluir el script Plotly (lo cargamos desde CDN)
@@ -653,6 +656,18 @@ def graficar_energia_altura(fig, dataFrame):
         legendgroup='8'
     ),row=8, col=1)
     
+
+def graficar_rozamiento_con_aire(fig, dataFrame):
+	dataFrame_filtrado = dataFrame.iloc[::5]
+	fig.add_trace(go.Scatter(
+		x=dataFrame_filtrado['Velocidad (m/s)'],
+		y=dataFrame_filtrado['Rozamiento viscoso (N)'],
+		mode='lines+markers',
+		name='Rozamiento viscoso (N)',
+		line=dict(color='blue'),
+		legendgrouptitle_text='Rozamiento',
+		legendgroup='9'
+	), row=9, col=1)
 
 def graficar_aceleracion_oblique(fig, dataFrame):
     # Graficar la velocidad

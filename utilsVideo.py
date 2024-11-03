@@ -4,9 +4,10 @@ import numpy as np
 PX_TO_CM = 0.64286
 PX_TO_CM_OBLICUO = 0.9047
 TIEMPO_LANZAMIENTO = 0.475
-TIEMPO_ALTURA_MAXIMA = 1.225
+TIEMPO_ALTURA_MAXIMA = 1.267
 TIEMPO_ENTRE_LANZ_ALTMAX = 1.225 - 0.475
 TIEMPO_DEJA_AGUA_CTE=0.675
+TIEMPO_ATERRIZAJE = 1.93
 def rescaleFrame(frame, scale=0.75):
   width = frame.shape[1] * scale
   height = frame.shape[0] * scale
@@ -26,7 +27,7 @@ def masaConRespectoAlTiempo(t):
     # Utilizar np.where para hacer comparaciones vectorizadas con los tiempos dados
     return np.where(t < TIEMPO_LANZAMIENTO, 0.73,  # Antes del lanzamiento
                     np.where(t > TIEMPO_DEJA_AGUA_CTE, 0.03,  # Después de la altura máxima
-                             0.73 + pendiente * (t - TIEMPO_LANZAMIENTO)))  # Durante el ascenso
+										0.73 + pendiente * (t - TIEMPO_LANZAMIENTO)))  # Durante el ascenso
 
 def smooth_positions(positions, window_size=10):
 	return np.convolve(positions, np.ones(window_size)/window_size, mode='valid')
@@ -43,6 +44,7 @@ def posicion_en_metros_oblicuo(df):
 def suavizar_df_vertical(df):
   smoothed_positions = smooth_positions(df['Posición Y (m)'], window_size=10)
   df = df.iloc[:len(smoothed_positions)]
+  df['Posición Y (m)'] = smoothed_positions
   return df
 
 def suavizar_df_oblicuo(df):
@@ -54,17 +56,17 @@ def suavizar_df_oblicuo(df):
   return df
 
 def calcular_velocidad_vertical(df):
-    # Calcular la diferencia de posición y tiempo con un desplazamiento de 5
-    df['diferencia_posicion'] = df['Posición Y (m)'].shift(-5) - df['Posición Y (m)'].shift(5)
-    df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
-    
-    # Calcular la velocidad dividiendo las diferencias
-    df['Velocidad (m/s)'] = df['diferencia_posicion'] / df['diferencia_tiempoV']
-    
-    # Rellenar valores NaN con 0 en la columna de velocidad
-    df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
-    
-    return df
+	# Calcular la diferencia de posición y tiempo con un desplazamiento de 5
+	df['diferencia_posicion'] = df['Posición Y (m)'].shift(-5) - df['Posición Y (m)'].shift(5)
+	df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
+	
+	# Calcular la velocidad dividiendo las diferencias
+	df['Velocidad (m/s)'] = df['diferencia_posicion'] / df['diferencia_tiempoV']
+	
+	# Rellenar valores NaN con 0 en la columna de velocidad
+	df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
+	
+	return df
 
 
 def calcular_velocidad_oblicuo(df):
@@ -95,11 +97,11 @@ def calcular_aceleracion_oblicuo(df):
   return df
 
 def calcular_masa_vertical(df):
-    # Calcular las masas con respecto al tiempo ajustado
-    df['Masa (kg)'] = masaConRespectoAlTiempo(df['Tiempo (s)'])    
-    # Reemplazar NaN en las filas que no tienen valores de masa por 0
-    df['Masa (kg)'] = df['Masa (kg)'].fillna(0)  
-    return df
+	# Calcular las masas con respecto al tiempo ajustado
+	df['Masa (kg)'] = masaConRespectoAlTiempo(df['Tiempo (s)'])    
+	# Reemplazar NaN en las filas que no tienen valores de masa por 0
+	df['Masa (kg)'] = df['Masa (kg)'].fillna(0)  
+	return df
 
 def calcular_cantidad_movimiento(df):
   df['Cantidad de Movimiento'] = df['Velocidad (m/s)'] * df['Masa (kg)']
@@ -122,4 +124,10 @@ def calcular_energia_potencial(df):
 
 def calcular_energia_mecanica(df):
   df['Energia Mecanica (J)'] = df['Energia Cinetica (J)'] + df['Energia Potencial (J)']
+  return df
+
+def calcular_rozamiento_viscoso(df):
+  df.loc[(df['Tiempo (s)'] >= TIEMPO_ALTURA_MAXIMA) & (df['Tiempo (s)'] <= TIEMPO_ATERRIZAJE), 'Rozamiento viscoso (N)'] = (
+		df['Masa (kg)'] * (9.81 + df['Aceleración (m/s^2)'])
+  )
   return df
