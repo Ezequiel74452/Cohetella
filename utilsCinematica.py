@@ -227,6 +227,8 @@ def calcular_posicion_caida_libre(dataFrame, dfPtoMaximo):
     return posicion_caida
 
 def ajustar_velocidad_TV(dataFrame, dfVelMaxima):
+    print(dfVelMaxima)
+    
     tiempo_vel_maxima = dfVelMaxima['Tiempo (s)']
     vel_maxima = dfVelMaxima['Velocidad (m/s)']
     

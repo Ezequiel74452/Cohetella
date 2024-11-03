@@ -5,6 +5,7 @@ import plotly.io as pio
 from plotly.subplots import make_subplots
 from utilsCinematica import *
 from otherUtils import *
+from utilsVideo import *
 
 pio.renderers.default = 'browser'
 HTML_VERTICAL_NAME = "graficos_vertical.html"
@@ -23,6 +24,13 @@ COLOR_FUNCION_VELOCIDAD_2 = 'orange'
 COLOR_VELOCIDAD_CAIDA_LIBRE = 'green'
 COLOR_VELOCIDAD_TIRO_VERTICAL = 'purple'
 
+COLOR_MASA = 'blue'
+COLOR_CANTIDAD_MOVIMIENTO = 'red'
+COLOR_FUERZA = 'orange'
+
+COLOR_ENERGIA_POTENCIAL = 'red'
+COLOR_ENERGIA_CINETICA = 'blue'
+COLOR_ENERGIA_MECANICA = 'green'
 
 def graficar_csv_matplot():
     # Leer el archivo CSV
@@ -178,9 +186,9 @@ def graficar_plotly(dataFrame):
     posicion_tiro_vertical = calcular_posicion_tiro_vertical(dataFrame, velocidadMaxInicial)
     
     
-    fig = make_subplots(rows=3, cols=1, 
-                        vertical_spacing=0.1,
-                        subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo"))
+    fig = make_subplots(rows=8, cols=1, 
+                        vertical_spacing=0.05,
+                        subplot_titles=("Posición en el tiempo", "Velocidad en el tiempo", "Aceleración en el tiempo", "Masa en el tiempo", "Cant. de Movimiento en el tiempo", "Fuerza en el tiempo", "Energía en el tiempo", "Energía en la altura"))
     
     graficar_posicion_vertical(fig, 
 															dataFrame, 
@@ -202,10 +210,20 @@ def graficar_plotly(dataFrame):
     
     graficar_aceleracion_vertical(fig, dataFrame)
     
+    graficar_masa(fig, dataFrame)
+    
+    graficar_cantidad_movimiento(fig, dataFrame)
+    
+    graficar_fuerza(fig, dataFrame)
+    
+    graficar_energia(fig, dataFrame)
+    
+    graficar_energia_altura(fig, dataFrame)
+    
     fig.update_layout(
-        height=1200, # altura del gráfico
+        height=3200, # altura del gráfico
         title='Datos de la botella en el tiempo',
-        legend_tracegroupgap=260
+        legend_tracegroupgap=320
     )
     fig.update_layout(legend=dict(groupclick="toggleitem"))
      
@@ -214,6 +232,12 @@ def graficar_plotly(dataFrame):
     fig.update_yaxes(title_text="Posición (m)", row=1, col=1)
     fig.update_yaxes(title_text="Velocidad (m/s)", row=2, col=1)
     fig.update_yaxes(title_text="Aceleración (m/s^2)", row=3, col=1)
+    fig.update_yaxes(title_text="Masa (kg)", row=4, col=1)
+    fig.update_yaxes(title_text="Cant. de Movimiento (kg*m/s)", row=5, col=1)
+    fig.update_yaxes(title_text="Fuerza (N)", row=6, col=1)
+    fig.update_yaxes(title_text="Energía (J)", row=7, col=1)
+    fig.update_yaxes(title_text="Energía (J)", row=8, col=1)
+    fig.update_xaxes(title_text="Posición Y (m)", row=8, col=1)
     fig.update_yaxes(showgrid=True, gridcolor='LightGray')
     
     # Guardar la figura como HTML, sin incluir el script Plotly (lo cargamos desde CDN)
@@ -534,6 +558,101 @@ def graficar_aceleracion_vertical(fig, dataFrame):
         legendgroup='3'
     ),row=3, col=1)
 
+def graficar_masa(fig, dataFrame):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Masa (kg)'],
+        mode='lines',
+        name='Masa (kg)',
+        line=dict(color=COLOR_MASA),
+        legendgrouptitle_text='Masa',
+        legendgroup='4'
+    ),row=4, col=1)
+    
+def graficar_cantidad_movimiento(fig, dataFrame):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Cantidad de Movimiento'],
+        mode='lines',
+        name='Cantidad de movimiento',
+        line=dict(color=COLOR_CANTIDAD_MOVIMIENTO),
+        legendgrouptitle_text='Movimiento',
+        legendgroup='5'
+    ),row=5, col=1)
+    
+def graficar_fuerza(fig, dataFrame):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Fuerza (N)'],
+        mode='lines',
+        name='Fuerza (N)',
+        line=dict(color=COLOR_FUERZA),
+        legendgrouptitle_text='Fuerza',
+        legendgroup='6'
+    ),row=6, col=1)
+
+def graficar_energia(fig, dataFrame):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Energia Cinetica (J)'],
+        mode='lines',
+        name='Energía cinetica (J)',
+        line=dict(color=COLOR_ENERGIA_CINETICA),
+        legendgrouptitle_text='Energía',
+        legendgroup='7'
+    ),row=7, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Energia Potencial (J)'],
+        mode='lines',
+        name='Energía potencial (J)',
+        line=dict(color=COLOR_ENERGIA_POTENCIAL),
+        legendgrouptitle_text='Energía',
+        legendgroup='7'
+    ),row=7, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Energia Mecanica (J)'],
+        mode='lines',
+        name='Energía Mecánica (J)',
+        line=dict(color=COLOR_ENERGIA_MECANICA),
+        legendgrouptitle_text='Energía',
+        legendgroup='7'
+    ),row=7, col=1)
+    
+def graficar_energia_altura(fig, dataFrame):
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Posición Y (m)'],
+        y=dataFrame['Energia Cinetica (J)'],
+        mode='lines',
+        name='Energía cinetica (J)',
+        line=dict(color=COLOR_ENERGIA_CINETICA),
+        legendgrouptitle_text='Energía',
+        legendgroup='8'
+    ),row=8, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Posición Y (m)'],
+        y=dataFrame['Energia Potencial (J)'],
+        mode='lines',
+        name='Energía potencial (J)',
+        line=dict(color=COLOR_ENERGIA_POTENCIAL),
+        legendgrouptitle_text='Energía',
+        legendgroup='8'
+    ),row=8, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Posición Y (m)'],
+        y=dataFrame['Energia Mecanica (J)'],
+        mode='lines',
+        name='Energía Mecánica (J)',
+        line=dict(color=COLOR_ENERGIA_MECANICA),
+        legendgrouptitle_text='Energía',
+        legendgroup='8'
+    ),row=8, col=1)
+    
 
 def graficar_aceleracion_oblique(fig, dataFrame):
     # Graficar la velocidad
