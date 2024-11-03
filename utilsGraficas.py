@@ -284,6 +284,7 @@ def graficar_plotly(dataFrame):
 def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada_CL, posicion_caida_libre, tiempo_caida_libre, posicion_ajustada_TV, posicion_tiro_vertical, tiempo_tiro_vertical):
     alturaMaxI = alturaMaximaInicio(dataFrame)
     alturaMaxF = alturaMaximaFin(dataFrame)
+    alturaMaxM = (alturaMaxF['Tiempo (s)'] + alturaMaxI['Tiempo (s)'])/2
     
     fig.add_trace(go.Scatter(
         x=dataFrame['Tiempo (s)'],
@@ -340,19 +341,20 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada_CL, posicion_ca
         visible='legendonly' 
     ),row=1, col=1)
     
+    print("ALTURA MAX M: ", alturaMaxM)
+    fig.add_shape(type='line',
+                  x0=alturaMaxM,
+                  x1=alturaMaxM,
+                  y0=dataFrame['Posición Y (m)'].min(),
+                  y1=dataFrame['Posición Y (m)'].max(),
+                  line=dict(color='red', dash='dash'))
+    #fig.add_shape(type='line',
+    #              x0=alturaMaxF['Tiempo (s)'],
+    #              x1=alturaMaxF['Tiempo (s)'],
+    #              y0=dataFrame['Posición Y (m)'].min(),
+    #              y1=dataFrame['Posición Y (m)'].max(),
+    #              line=dict(color='red', dash='dash'))
     
-    fig.add_shape(type='line',
-                  x0=alturaMaxI['Tiempo (s)'],
-                  x1=alturaMaxI['Tiempo (s)'],
-                  y0=dataFrame['Posición Y (m)'].min(),
-                  y1=dataFrame['Posición Y (m)'].max(),
-                  line=dict(color='red', dash='dash'))
-    fig.add_shape(type='line',
-                  x0=alturaMaxF['Tiempo (s)'],
-                  x1=alturaMaxF['Tiempo (s)'],
-                  y0=dataFrame['Posición Y (m)'].min(),
-                  y1=dataFrame['Posición Y (m)'].max(),
-                  line=dict(color='red', dash='dash'))
 
 def graficar_posicion_oblique_y(fig, dataFrame, posicion_ajustada_y, posicion_y, tiempo_y):
     fig.add_trace(go.Scatter(
