@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from angle_tab_panels import OrigenPanel
+from gui.angles.angle_tab_panels import OrigenPanel
 
 class AngleFrame(ctk.CTkFrame):
 	def __init__(self, parent, enable_i, enable_s, pasar_frame, path):

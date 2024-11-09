@@ -1,9 +1,9 @@
 import customtkinter as ctk
-from csv_widgets import CSVVerticalInput, CSVObliqueInput
-from video_widgets import VideoObliqueInput, VideoVerticalInput
+from gui.csv.csv_widgets import CSVVerticalInput, CSVObliqueInput
+from gui.video.video_widgets import VideoObliqueInput, VideoVerticalInput
 from abc import ABC
-from close_btn import CloseBtn
-from constants import *
+from gui.options.close_btn import CloseBtn
+from gui.constants import *
 
 class GUI(ctk.CTkFrame, ABC):
 	def __init__(self, parent, restore):
@@ -17,6 +17,7 @@ class GUI(ctk.CTkFrame, ABC):
 		self.csv_input = None
 	
 	def close_btn_func(self):
+		
 		self.grid_forget()
 		self.event_generate('<<RestoreMainScreen>>', when='tail')
 	

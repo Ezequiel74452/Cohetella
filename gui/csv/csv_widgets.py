@@ -3,9 +3,9 @@ import pandas as pd
 import os
 import webbrowser
 from abc import ABC, abstractmethod
-from constants import *
+from gui.constants import *
 from tkinter import filedialog, messagebox
-from utilsGraficas import graficar_csv_plotly, graficar_oblique_csv_plotly
+from utils.utilsGraficas import graficar_csv_plotly, graficar_oblique_csv_plotly
 
 class CSVInput(ctk.CTkFrame, ABC):
 	def __init__(self, parent):

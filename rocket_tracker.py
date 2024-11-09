@@ -1,6 +1,6 @@
 import customtkinter as ctk
-from constants import *
-from img_frames import ImageFrameOblique, ImageFrameVertical
+from gui.constants import *
+from gui.frames.img_frames import ImageFrameOblique, ImageFrameVertical
 
 class Main(ctk.CTk):
 	def __init__(self):

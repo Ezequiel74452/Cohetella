@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from abc import ABC, abstractmethod
-from track_frame_tab import TrackFrameVertical, TrackFrameOblique
-from angle_frame_tab import AngleFrame
+from gui.frames.track_frame_tab import TrackFrameVertical, TrackFrameOblique
+from gui.angles.angle_frame_tab import AngleFrame
 
 class Menu(ctk.CTkTabview, ABC):
 	def __init__(self, parent, enable_o, enable_i, enable_s, pasar_frame, path, change_func):

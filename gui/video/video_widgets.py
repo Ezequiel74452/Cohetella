@@ -1,8 +1,8 @@
 import customtkinter as ctk
-from constants import *
+from gui.constants import *
 from tkinter import filedialog
 from abc import ABC, abstractmethod
-from video_import_container import ContainerOblique, ContainerVertical
+from gui.video.video_import_container import ContainerOblique, ContainerVertical
 
 class VideoInput(ctk.CTkFrame, ABC):
 	def __init__(self, parent):

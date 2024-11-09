@@ -2,10 +2,10 @@ import customtkinter as ctk
 import cv2
 import numpy as np
 import pandas as pd
-from img_output import ImageFrameOutput
+from gui.img_output import ImageFrameOutput
 from PIL import Image, ImageTk, ImageDraw
-from utilsAngle import calcular_angulo
-from succesful_track_frame import EndOfVideoFrame
+from utils.utilsAngle import calcular_angulo
+from gui.frames.succesful_track_frame import EndOfVideoFrame
 
 class AngleSelect(ctk.CTkFrame):
 	def __init__(self, parent, path):

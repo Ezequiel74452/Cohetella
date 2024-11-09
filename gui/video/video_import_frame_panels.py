@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from constants import *
+from gui.constants import *
 
 class Panel(ctk.CTkFrame):
     def __init__(self, parent):

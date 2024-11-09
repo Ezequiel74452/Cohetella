@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from constants import *
+from gui.constants import *
 
 class ImageFrameOutput(ctk.CTkCanvas):
 	def __init__(self, parent, func_config, func_options):

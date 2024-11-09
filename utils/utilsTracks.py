@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import pandas as pd
-import utilsVideo as uv
+import utils.utilsVideo as uv
 
 def oblique_track(path, origen_y, origen_x, fps):
 	cap = cv2.VideoCapture(path)
@@ -140,7 +140,7 @@ def vertical_track(path, origen_y, origen_x, fps):
 		cv2.destroyAllWindows()
 
 		dataFrame = uv.posicion_en_metros_vertical(dataFrame)
-		dataFrame = uv.suavizar_df_vertical(dataFrame)
+		#dataFrame = uv.suavizar_df_vertical(dataFrame)
 		dataFrame = uv.calcular_velocidad_vertical(dataFrame)
 		dataFrame = uv.calcular_aceleracion_vertical(dataFrame)
 		dataFrame = uv.calcular_masa_vertical(dataFrame)

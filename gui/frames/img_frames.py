@@ -1,8 +1,8 @@
 import customtkinter as ctk
 from abc import ABC
-from constants import *
-from img_output import ImageFrameOutput
-from options_gui import GUIVertical, GUIOblique
+from gui.constants import *
+from gui.img_output import ImageFrameOutput
+from gui.options.options_gui import GUIVertical, GUIOblique
 from PIL import Image, ImageTk
 
 class ImageFrame(ctk.CTkFrame, ABC):

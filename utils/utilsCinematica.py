@@ -1,10 +1,10 @@
 import numpy as np
 import math
 import pandas as pd
-from utilsCaidaLibre import *
-from utilsGenerico import *
-from utilsTiroOblicuo import *
-from utilsTiroVertical import *
+from utils.utilsCaidaLibre import *
+from utils.utilsGenerico import *
+from utils.utilsTiroOblicuo import *
+from utils.utilsTiroVertical import *
 from scipy.optimize import curve_fit
 
 TIEMPO_VEL_FINAL_VERTICAL = 2.083

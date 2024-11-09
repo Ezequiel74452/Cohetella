@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import cv2
-from img_output import ImageFrameOutput
+from gui.img_output import ImageFrameOutput
 from PIL import Image, ImageTk, ImageDraw
 
 class OriginSelect(ctk.CTkFrame):

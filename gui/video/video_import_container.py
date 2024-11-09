@@ -1,9 +1,9 @@
 import customtkinter as ctk
 from abc import ABC, abstractmethod
-from close_btn import CloseBtn
-from origin_select_frame import OriginSelect
-from angle_select_frame import AngleSelect
-from video_import_menu import MenuOblique, MenuVertical
+from gui.options.close_btn import CloseBtn
+from gui.frames.origin_select_frame import OriginSelect
+from gui.angles.angle_select_frame import AngleSelect
+from gui.video.video_import_menu import MenuOblique, MenuVertical
 
 class Container(ctk.CTkFrame, ABC):
 	def __init__(self, parent, path):

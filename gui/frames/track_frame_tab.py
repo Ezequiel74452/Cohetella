@@ -1,8 +1,8 @@
 import customtkinter as ctk
 from abc import ABC, abstractmethod
-from succesful_track_frame import SuccesfulTrackFrameVertical, SuccesfulTrackFrameOblique
-from utilsTracks import vertical_track, oblique_track
-from video_import_frame_panels import OrigenPanel, FPSPanel
+from gui.frames.succesful_track_frame import SuccesfulTrackFrameVertical, SuccesfulTrackFrameOblique
+from utils.utilsTracks import vertical_track, oblique_track
+from gui.video.video_import_frame_panels import OrigenPanel, FPSPanel
 
 class TrackFrame(ctk.CTkFrame, ABC):
 	def __init__(self, parent, func, path):

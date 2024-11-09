@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
-from utilsCinematica import *
-from otherUtils import *
-from utilsVideo import *
+from utils.utilsCinematica import *
+from utils.otherUtils import *
+from utils.utilsVideo import *
 
 pio.renderers.default = 'browser'
 HTML_VERTICAL_NAME = "graficos_vertical.html"

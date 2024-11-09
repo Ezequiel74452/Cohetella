@@ -1,10 +1,10 @@
 import webbrowser
 import customtkinter as ctk
 from abc import ABC, abstractmethod
-from constants import *
+from gui.constants import *
 from tkinter import messagebox
 import os
-from utilsGraficas import oblique_graph, graficar_plotly
+from utils.utilsGraficas import oblique_graph, graficar_plotly
 
 class SuccesfulTrackFrame(ctk.CTkFrame, ABC):
 	def __init__(self, parent, df):
