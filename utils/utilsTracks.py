@@ -2,6 +2,105 @@ import cv2
 import numpy as np
 import pandas as pd
 import utils.utilsVideo as uv
+import utils.utilsCinematica as uc
+import utils.utilsDinamica as ud
+import utils.utilsEnergia as ue
+
+def vertical_track(path, origen_y, origen_x, fps):
+	videoCapturado = cv2.VideoCapture(path) 
+
+	ret, primerFrame = videoCapturado.read()
+	if not ret:
+			print("No se pudo leer el video.")
+			videoCapturado.release()
+			cv2.destroyAllWindows()
+			exit()
+
+	VID_WIDTH = int(videoCapturado.get(cv2.CAP_PROP_FRAME_WIDTH))
+	VID_HEIGHT = int(videoCapturado.get(cv2.CAP_PROP_FRAME_HEIGHT))
+	PISO = VID_HEIGHT - int(origen_y)
+	ORIGEN = int(origen_x)
+	FPS = int(fps)
+
+	dataFrame = pd.DataFrame(data= {'Tiempo (s)':np.array([]), 'Posición Y (px)':np.array([])})
+
+	tracker = cv2.legacy.TrackerCSRT.create()
+	frame_resized = uv.rescaleFrame(primerFrame, scale=.5)
+	bbox = cv2.selectROI(frame_resized, False)
+	if bbox != (0, 0, 0, 0):
+		tracker.init(frame_resized, bbox)
+
+		#comienza a procesar frame por frame:
+		frame_nro = 0
+		while True:
+				#captura el proximo frame
+				exito, frame_actual = videoCapturado.read()
+				if not exito:
+						break
+				frame_resized = uv.rescaleFrame(frame_actual, scale=.5)
+
+				# Actualizar el rastreador
+				success, bbox = tracker.update(frame_resized)
+				if success:
+						x, y, w, h = [int(v) for v in bbox]
+						center_x = x + w // 2
+						center_y = y + h // 2
+
+						# Guardar las posiciones de acuerdo a nuestro sistema de coordenadas
+						final_y = VID_HEIGHT - PISO - (center_y * 2)
+
+						# Calcular el tiempo correspondiente a este fotograma
+						time_elapsed = frame_nro / FPS  # Tiempo en segundos
+
+						datos_del_frame = {'Tiempo (s)':[time_elapsed], 'Posición Y (px)':[final_y]}
+
+						dataFrameAuxiliar = pd.DataFrame(data=datos_del_frame)
+						dataFrame = pd.concat([dataFrame, dataFrameAuxiliar], ignore_index=True)
+
+						# Dibujar la caja y el centro
+						cv2.rectangle(frame_resized, (x, y), (x + w, y + h), (0, 255, 0), 2)
+						cv2.circle(frame_resized, (center_x, center_y), 5, (0, 0, 255), -1)
+
+				frame_nro += 1
+
+				# Mostrar el fotograma
+				cv2.imshow('Tracking', frame_resized)
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+						break
+
+		videoCapturado.release()
+		cv2.destroyAllWindows()
+
+		dataFrame = uv.posicion_en_metros_vertical(dataFrame)
+		dataFrame = uv.suavizar_df_vertical(dataFrame)
+		dataFrame = uc.calcular_velocidad_vertical(dataFrame)
+		dataFrame = uc.calcular_aceleracion_vertical(dataFrame)
+  
+		tiempo_lanzamiento = uv.calcular_tiempo_lanzamiento(dataFrame)
+		tiempo_vel_maxima_inicial = uc.calcularVelocidadMaximaInicial(dataFrame)
+		tiempo_altura_maxima = uc.puntoMedioAlturaMaxima(dataFrame)
+		tiempo_vel_maxima_final = uc.calcularVelocidadMaximaFinal(dataFrame)
+		tiempo_aterrizaje = uv.calcular_tiempo_aterrizaje(dataFrame, tiempo_vel_maxima_final)
+  
+		print(tiempo_lanzamiento)
+		print(tiempo_aterrizaje)
+
+  
+		dataFrame = ud.calcular_masa_vertical(dataFrame, tiempo_lanzamiento, tiempo_vel_maxima_inicial)
+		dataFrame = ud.calcular_cantidad_movimiento(dataFrame)
+		dataFrame = ud.calcular_fuerza(dataFrame)
+		dataFrame = ud.calcular_rozamiento_viscoso(dataFrame, tiempo_altura_maxima, tiempo_aterrizaje)
+		dataFrame = ue.calcular_energia_cinetica(dataFrame)
+		dataFrame = ue.calcular_energia_potencial(dataFrame)
+		dataFrame = ue.calcular_energia_mecanica(dataFrame)
+
+
+		return dataFrame
+	
+	videoCapturado.release()
+	cv2.destroyAllWindows()
+
+	return None
 
 def oblique_track(path, origen_y, origen_x, fps):
 	cap = cv2.VideoCapture(path)
@@ -68,92 +167,6 @@ def oblique_track(path, origen_y, origen_x, fps):
 		return df
 
 	cap.release()
-	cv2.destroyAllWindows()
-
-	return None
-
-def vertical_track(path, origen_y, origen_x, fps):
-	videoCapturado = cv2.VideoCapture(path) 
-
-	ret, primerFrame = videoCapturado.read()
-	if not ret:
-			print("No se pudo leer el video.")
-			videoCapturado.release()
-			cv2.destroyAllWindows()
-			exit()
-
-	VID_WIDTH = int(videoCapturado.get(cv2.CAP_PROP_FRAME_WIDTH))
-	VID_HEIGHT = int(videoCapturado.get(cv2.CAP_PROP_FRAME_HEIGHT))
-	PISO = VID_HEIGHT - int(origen_y)
-	ORIGEN = int(origen_x)
-	FPS = int(fps)
-
-	dataFrame = pd.DataFrame(data= {'Tiempo (s)':np.array([]), 'Posición Y (px)':np.array([])})
-
-	tracker = cv2.legacy.TrackerCSRT.create()
-	frame_resized = uv.rescaleFrame(primerFrame, scale=.5)
-	bbox = cv2.selectROI(frame_resized, False)
-	if bbox != (0, 0, 0, 0):
-		tracker.init(frame_resized, bbox)
-
-		#comienza a procesar frame por frame:
-		frame_nro = 0
-		while True:
-				#captura el proximo frame
-				exito, frame_actual = videoCapturado.read()
-				if not exito:
-						break
-				frame_resized = uv.rescaleFrame(frame_actual, scale=.5)
-
-				# Actualizar el rastreador
-				success, bbox = tracker.update(frame_resized)
-				if success:
-						x, y, w, h = [int(v) for v in bbox]
-						center_x = x + w // 2
-						center_y = y + h // 2
-
-						# Guardar las posiciones de acuerdo a nuestro sistema de coordenadas
-						final_y = VID_HEIGHT - PISO - (center_y * 2)
-
-						# Calcular el tiempo correspondiente a este fotograma
-						time_elapsed = frame_nro / FPS  # Tiempo en segundos
-
-						datos_del_frame = {'Tiempo (s)':[time_elapsed], 'Posición Y (px)':[final_y]}
-
-						dataFrameAuxiliar = pd.DataFrame(data=datos_del_frame)
-						dataFrame = pd.concat([dataFrame, dataFrameAuxiliar], ignore_index=True)
-
-						print(f"Y: {final_y}, Tiempo: {time_elapsed}")
-
-						# Dibujar la caja y el centro
-						cv2.rectangle(frame_resized, (x, y), (x + w, y + h), (0, 255, 0), 2)
-						cv2.circle(frame_resized, (center_x, center_y), 5, (0, 0, 255), -1)
-
-				frame_nro += 1
-
-				# Mostrar el fotograma
-				cv2.imshow('Tracking', frame_resized)
-				if cv2.waitKey(1) & 0xFF == ord('q'):
-						break
-
-		videoCapturado.release()
-		cv2.destroyAllWindows()
-
-		dataFrame = uv.posicion_en_metros_vertical(dataFrame)
-		#dataFrame = uv.suavizar_df_vertical(dataFrame)
-		dataFrame = uv.calcular_velocidad_vertical(dataFrame)
-		dataFrame = uv.calcular_aceleracion_vertical(dataFrame)
-		dataFrame = uv.calcular_masa_vertical(dataFrame)
-		dataFrame = uv.calcular_cantidad_movimiento(dataFrame)
-		dataFrame = uv.calcular_fuerza(dataFrame)
-		dataFrame = uv.calcular_energia_cinetica(dataFrame)
-		dataFrame = uv.calcular_energia_potencial(dataFrame)
-		dataFrame = uv.calcular_energia_mecanica(dataFrame)
-		dataFrame = uv.calcular_rozamiento_viscoso(dataFrame)
-
-		return dataFrame
-	
-	videoCapturado.release()
 	cv2.destroyAllWindows()
 
 	return None

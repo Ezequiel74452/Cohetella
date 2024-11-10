@@ -7,15 +7,6 @@ from utils.utilsTiroOblicuo import *
 from utils.utilsTiroVertical import *
 from scipy.optimize import curve_fit
 
-TIEMPO_VEL_FINAL_VERTICAL = 2.083
-# Tiempos al momento de despegar
-#TIEMPO_DESPEGUE_OBLIQUE_X = 1.954
-#TIEMPO_DESPEGUE_OBLIQUE_Y = 1.958
-
-# Tiempos velocidad máxima
-TIEMPO_VEL_MAXIMA_OBLIQUE = 2.1875
-TIEMPO_VEL_FINAL_OBLIQUE = 3.88
-
 LBL_TIEMPO = "Tiempo (s)"
 LBL_POS_X = "Posición X (m)"
 LBL_POS_Y = "Posición Y (m)"
@@ -30,6 +21,214 @@ def filtrar_df(dataFrame, lower_bound, upper_bound, eje):
 def filtrar_inicio_df(dataFrame, tiempo, eje):
 	index = (dataFrame[LBL_TIEMPO] - tiempo).abs().idxmin()
 	return dataFrame.loc[index][eje]
+
+# ----------------- CÁLCULOS DE CINEMÁTICA LANZAMIENTO VERTICAL-----------------
+
+def calcular_velocidad_vertical(df):
+  df['diferencia_posicion'] = df['Posición Y (m)'].shift(-5) - df['Posición Y (m)'].shift(5)
+  df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
+  df['Velocidad (m/s)'] = df['diferencia_posicion'] / df['diferencia_tiempoV']
+  df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
+  df.drop(['diferencia_posicion', 'diferencia_tiempoV'], axis=1, inplace=True)
+  return df
+
+def calcular_aceleracion_vertical(df):
+  df['diferencia_velocidad'] = df['Velocidad (m/s)'].shift(-5) - df['Velocidad (m/s)'].shift(5)
+  df['diferencia_tiempoA'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
+  df['Aceleración (m/s^2)'] = df['diferencia_velocidad'] / df['diferencia_tiempoA']
+  df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
+  df.drop(['diferencia_velocidad', 'diferencia_tiempoA'], axis=1, inplace=True)
+  return df
+
+def alturaMaximaInicio(df: pd.DataFrame):
+	pos_max = df['Posición Y (m)'].max()
+	return df[df['Posición Y (m)'] == pos_max].iloc[0]
+
+def alturaMaximaFin(df: pd.DataFrame):
+	pos_max = df['Posición Y (m)'].max()
+	return df[df['Posición Y (m)'] == pos_max].iloc[-1]
+
+def puntoMedioAlturaMaxima(df: pd.DataFrame):
+    inicio = alturaMaximaInicio(df)
+    fin = alturaMaximaFin(df)
+    indice_inicio = df.index[df['Posición Y (m)'] == inicio['Posición Y (m)']][0]
+    indice_fin = df.index[df['Posición Y (m)'] == fin['Posición Y (m)']][-1]
+    
+    indice_medio = (indice_inicio + indice_fin) // 2
+    return df.iloc[indice_medio]
+
+def calcularVelocidadMaximaInicial(df: pd.DataFrame):
+	vel_max_incial = df['Velocidad (m/s)'].max()
+	return df[df['Velocidad (m/s)'] == vel_max_incial].iloc[-1]
+
+def calcularVelocidadMaximaFinal(df: pd.DataFrame):
+	vel_max_final = df['Velocidad (m/s)'].min()
+	return df[df['Velocidad (m/s)'] == vel_max_final].iloc[-1]
+
+# ----------------- AJUSTAR VELOCIDAD A ECUACIÓN DE CAÍDA LIBRE -----------------
+
+def ajustar_velocidad_CL(dataFrame, dfPtoMaximo, dfVelMaxFinal):
+    
+    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    
+    # Filtrar los datos del CSV entre el tiempo donde inicia el lanzamiento y el tiempo donde finaliza el lanzamiento
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    velocidad_filtrada = dataFrame['Velocidad (m/s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+
+    # Ajustar el tiempo para que comience en 0 desde el lanzamiento
+    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
+
+    # Ajuste de curva de la función de velocidad con los datos filtrados
+    popt, pcov = curve_fit(velocity, xdata=tiempo_ajustado, ydata=velocidad_filtrada, p0=[-9.81])
+    errs = np.sqrt(np.diag(pcov))
+
+    # Mostrar los parámetros ajustados y sus errores
+    print(popt, errs)
+    
+    g_ajustado = popt[0]
+    err_g= errs[0] 
+    
+    velocidad_ajustada = velocity(tiempo_ajustado, g_ajustado)
+    
+    return velocidad_ajustada, tiempo_filtrado, g_ajustado, err_g
+
+# ----------------- CALCULAR VELOCIDAD CAÍDA LIBRE -----------------
+
+def calcular_velocidad_caida_libre(dataFrame, dfPtoMaximo, dfVelMaxFinal):
+    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
+    velocidad_caida = velocity_caida_libre(tiempo_ajustado)
+    return velocidad_caida
+  
+# ----------------- AJUSTAR POSICIÓN A ECUACIÓN DE CAÍDA LIBRE -----------------
+
+def ajustar_posicion_CL(dataFrame, dfPtoMaximo, dfVelMaxFinal, g_ajustado):
+    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    altura_maxima = dfPtoMaximo['Posición Y (m)']
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
+    posicion_ajustada = position(tiempo_ajustado, altura_maxima, g_ajustado)
+    return posicion_ajustada
+
+# ----------------- CALCULAR POSICIÓN CAÍDA LIBRE -----------------
+def calcular_posicion_caida_libre(dataFrame, dfPtoMaximo, dfVelMaxFinal):
+    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    altura_maxima = dfPtoMaximo['Posición Y (m)']
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
+    posicion_caida = position_caida_libre(tiempo_ajustado, altura_maxima)
+    posicion_caida = posicion_caida[posicion_caida > 0]
+    return posicion_caida
+
+# ----------------- AJUSTAR VELOCIDAD A ECUACIÓN DE TIRO VERTICAL -----------------
+def ajustar_velocidad_TV(dataFrame, dfVelMaxInicial, dfVelMaxFinal):
+    
+    tiempo_vel_maxima_inicial = dfVelMaxInicial['Tiempo (s)']
+    vel_maxima_inicial = dfVelMaxInicial['Velocidad (m/s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    
+    # Filtrar los datos del CSV entre el tiempo donde inicia el lanzamiento y el tiempo donde finaliza el lanzamiento
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima_inicial) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    velocidad_filtrada = dataFrame['Velocidad (m/s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima_inicial) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+
+    # Ajustar el tiempo para que comience en 0 desde el lanzamiento
+    tiempo_ajustado = tiempo_filtrado -  tiempo_vel_maxima_inicial
+
+    # Ajuste de curva de la función de velocidad con los datos filtrados
+    popt, pcov = curve_fit(velocity, xdata=tiempo_ajustado, ydata=velocidad_filtrada, p0=[-9.81, vel_maxima_inicial])
+    errs = np.sqrt(np.diag(pcov))
+
+    # Mostrar los parámetros ajustados y sus errores
+    print(popt, errs)
+    
+    g_ajustado = popt[0]
+    err_g= errs[0]
+    
+    velocidad_ajustada = velocity(tiempo_ajustado, g_ajustado, vel_maxima_inicial)
+    
+    return velocidad_ajustada, tiempo_filtrado, g_ajustado, err_g
+  
+# ----------------- CALCULAR VELOCIDAD TIRO VERTICAL -----------------
+
+def calcular_velocidad_tiro_vertical(dataFrame, dfVelMaxInicial, dfVelMaxFinal):
+    tiempo_vel_maxima_inicial = dfVelMaxInicial['Tiempo (s)']
+    vel_maxima_inicial = dfVelMaxInicial['Velocidad (m/s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima_inicial) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    tiempo_ajustado = tiempo_filtrado - tiempo_vel_maxima_inicial
+    velocidad_tiro_vertical = velocity_tiro_vertical(tiempo_ajustado, vel_maxima_inicial)
+    return velocidad_tiro_vertical
+
+# ----------------- AJUSTAR POSICIÓN A ECUACIÓN DE TIRO VERTICAL -----------------
+
+def ajustar_posicion_TV(dataFrame, dfVelMaxInicial, dfVelMaxFinal, g_ajustado):
+    tiempo_vel_maxima_inicial = dfVelMaxInicial['Tiempo (s)']
+    vel_maxima_inicial = dfVelMaxInicial['Velocidad (m/s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    altura_inicial = dfVelMaxInicial['Posición Y (m)']
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima_inicial) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    tiempo_ajustado = tiempo_filtrado - tiempo_vel_maxima_inicial
+    posicion_ajustada = position(tiempo_ajustado, altura_inicial, g_ajustado, vel_maxima_inicial)
+    return posicion_ajustada
+
+# ----------------- CALCULAR POSICION TIRO VERTICAL -----------------
+
+def calcular_posicion_tiro_vertical(dataFrame, dfVelMaxInicial, dfVelMaxFinal):
+    tiempo_vel_maxima_inicial = dfVelMaxInicial['Tiempo (s)']
+    vel_maxima_inicial = dfVelMaxInicial['Velocidad (m/s)']
+    tiempo_vel_maxima_final = dfVelMaxFinal['Tiempo (s)']
+    altura_inicial = dfVelMaxInicial['Posición Y (m)']
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima_inicial) & (dataFrame['Tiempo (s)'] <= tiempo_vel_maxima_final)]
+    tiempo_ajustado = tiempo_filtrado - tiempo_vel_maxima_inicial
+    posicion_tiro_vertical = position_tiro_vertical(tiempo_ajustado, altura_inicial, vel_maxima_inicial)
+    posicion_tiro_vertical = posicion_tiro_vertical[posicion_tiro_vertical > 0]
+    return posicion_tiro_vertical
+  
+
+
+
+# ----------------- CÁLCULOS DE CINEMÁTICA LANZAMIENTO OBLICUO -----------------
+
+# Tiempos velocidad máxima
+TIEMPO_VEL_MAXIMA_OBLIQUE = 2.1875
+TIEMPO_VEL_FINAL_OBLIQUE = 3.88  
+
+def calcular_velocidad_oblicuo(df):
+  df['diferencia_posicion_x'] = df['Posición X (m)'].shift(-5) - df['Posición X (m)'].shift(5)
+  df['diferencia_posicion_y'] = df['Posición Y (m)'].shift(-5) - df['Posición Y (m)'].shift(5)
+  df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
+  df['Velocidad X (m/s)'] = df['diferencia_posicion_x'] / df['diferencia_tiempoV']
+  df['Velocidad Y (m/s)'] = df['diferencia_posicion_y'] / df['diferencia_tiempoV']
+  df['Velocidad X (m/s)'] = df['Velocidad X (m/s)'].fillna(0)
+  df['Velocidad Y (m/s)'] = df['Velocidad Y (m/s)'].fillna(0)
+  return df
+  
+def calcular_aceleracion_oblicuo(df):
+  df['diferencia_velocidad_x'] = df['Velocidad X (m/s)'].shift(-5) - df['Velocidad X (m/s)'].shift(5)
+  df['diferencia_velocidad_y'] = df['Velocidad Y (m/s)'].shift(-5) - df['Velocidad Y (m/s)'].shift(5)
+  df['diferencia_tiempoA'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
+  df['Aceleración X (m/s^2)'] = df['diferencia_velocidad_x'] / df['diferencia_tiempoA']
+  df['Aceleración Y (m/s^2)'] = df['diferencia_velocidad_y'] / df['diferencia_tiempoA']
+  df['Aceleración X (m/s^2)'] = df['Aceleración X (m/s^2)'].fillna(0)
+  df['Aceleración Y (m/s^2)'] = df['Aceleración Y (m/s^2)'].fillna(0)
+  return df
+
+def calcularVelocidadMaximaInicialObliqueX(df: pd.DataFrame):
+	vel_max_incial = df['Velocidad X (m/s)'].max()
+	return df[df['Velocidad X (m/s)'] == vel_max_incial].iloc[-1]
+
+def calcularVelocidadMaximaInicialObliqueY(df: pd.DataFrame):
+	vel_max_incial = df['Velocidad Y (m/s)'].max()
+	return df[df['Velocidad Y (m/s)'] == vel_max_incial].iloc[-1]
+
+def calcularVelocidadMaximaFinalOblique(df: pd.DataFrame):
+	vel_max_final = df['Velocidad Y (m/s)'].min()
+	return df[df['Velocidad Y (m/s)'] == vel_max_final].iloc[-1]
 
 # ----------------- AJUSTAR POSICIÓN OBLICUA -----------------
 
@@ -171,111 +370,3 @@ def calcular_velocidad_oblique_y(dataFrame):
   
   velocidad_oblique_y = vel_oblique_y(tiempo_ajustado, vel_inicial)
   return velocidad_oblique_y
-
-# ----------------- AJUSTAR VELOCIDAD CAÍDA LIBRE -----------------
-
-def ajustar_velocidad_CL(dataFrame, dfPtoMaximo):
-    
-    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
-    
-    # Filtrar los datos del CSV entre el tiempo donde inicia el lanzamiento y el tiempo donde finaliza el lanzamiento
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_VERTICAL)]
-    velocidad_filtrada = dataFrame['Velocidad (m/s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_VERTICAL)]
-
-    # Ajustar el tiempo para que comience en 0 desde el lanzamiento
-    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
-
-    # Ajuste de curva de la función de velocidad con los datos filtrados
-    popt, pcov = curve_fit(velocity, xdata=tiempo_ajustado, ydata=velocidad_filtrada, p0=[-9.81])
-    errs = np.sqrt(np.diag(pcov))
-
-    # Mostrar los parámetros ajustados y sus errores
-    print(popt, errs)
-    
-    g_ajustado = popt[0]
-    err_g= errs[0] 
-    
-    velocidad_ajustada = velocity(tiempo_ajustado, g_ajustado)
-    
-    return velocidad_ajustada, tiempo_filtrado, g_ajustado, err_g
-
-# ----------------- CALCULAR VELOCIDAD CAÍDA LIBRE -----------------
-
-def calcular_velocidad_caida_libre(dataFrame, dfPtoMaximo):
-    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_OBLIQUE)]
-    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
-    velocidad_caida = velocity_caida_libre(tiempo_ajustado)
-    return velocidad_caida
-
-def ajustar_posicion_CL(dataFrame, dfPtoMaximo, g_ajustado):
-    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
-    altura_maxima = dfPtoMaximo['Posición Y (m)']
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_OBLIQUE)]
-    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
-    posicion_ajustada = position(tiempo_ajustado, altura_maxima, g_ajustado)
-    return posicion_ajustada
-
-def calcular_posicion_caida_libre(dataFrame, dfPtoMaximo):
-    tiempo_pto_maximo = dfPtoMaximo['Tiempo (s)']
-    altura_maxima = dfPtoMaximo['Posición Y (m)']
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_pto_maximo) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_OBLIQUE)]
-    tiempo_ajustado = tiempo_filtrado - tiempo_pto_maximo
-    posicion_caida = position_caida_libre(tiempo_ajustado, altura_maxima)
-    #Filtrar posiciones mayores a 0
-    posicion_caida = posicion_caida[posicion_caida > 0]
-    return posicion_caida
-
-def ajustar_velocidad_TV(dataFrame, dfVelMaxima):
-    print(dfVelMaxima)
-    
-    tiempo_vel_maxima = dfVelMaxima['Tiempo (s)']
-    vel_maxima = dfVelMaxima['Velocidad (m/s)']
-    
-    # Filtrar los datos del CSV entre el tiempo donde inicia el lanzamiento y el tiempo donde finaliza el lanzamiento
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_VERTICAL)]
-    velocidad_filtrada = dataFrame['Velocidad (m/s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_VERTICAL)]
-
-    # Ajustar el tiempo para que comience en 0 desde el lanzamiento
-    tiempo_ajustado = tiempo_filtrado - tiempo_vel_maxima
-
-    # Ajuste de curva de la función de velocidad con los datos filtrados
-    popt, pcov = curve_fit(velocity, xdata=tiempo_ajustado, ydata=velocidad_filtrada, p0=[-9.81, vel_maxima])
-    errs = np.sqrt(np.diag(pcov))
-
-    # Mostrar los parámetros ajustados y sus errores
-    print(popt, errs)
-    
-    g_ajustado = popt[0]
-    err_g= errs[0]
-    
-    velocidad_ajustada = velocity(tiempo_ajustado, g_ajustado, vel_maxima)
-    
-    return velocidad_ajustada, tiempo_filtrado, g_ajustado, err_g
-
-def calcular_velocidad_tiro_vertical(dataFrame, dfVelMaxima):
-    tiempo_vel_maxima = dfVelMaxima['Tiempo (s)']
-    vel_maxima = dfVelMaxima['Velocidad (m/s)']
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_VERTICAL)]
-    tiempo_ajustado = tiempo_filtrado - tiempo_vel_maxima
-    velocidad_tiro_vertical = velocity_tiro_vertical(tiempo_ajustado, vel_maxima)
-    return velocidad_tiro_vertical
-
-def ajustar_posicion_TV(dataFrame, dfVelMaxima, g_ajustado):
-    tiempo_vel_maxima = dfVelMaxima['Tiempo (s)']
-    vel_maxima = dfVelMaxima['Velocidad (m/s)']
-    altura_inicial = dfVelMaxima['Posición Y (m)']
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_VERTICAL)]
-    tiempo_ajustado = tiempo_filtrado - tiempo_vel_maxima
-    posicion_ajustada = position(tiempo_ajustado, altura_inicial, g_ajustado, vel_maxima)
-    return posicion_ajustada
-
-def calcular_posicion_tiro_vertical(dataFrame, dfVelMaxima):
-    tiempo_vel_maxima = dfVelMaxima['Tiempo (s)']
-    vel_maxima = dfVelMaxima['Velocidad (m/s)']
-    altura_inicial = dfVelMaxima['Posición Y (m)']
-    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_vel_maxima) & (dataFrame['Tiempo (s)'] <= TIEMPO_VEL_FINAL_VERTICAL)]
-    tiempo_ajustado = tiempo_filtrado - tiempo_vel_maxima
-    posicion_tiro_vertical = position_tiro_vertical(tiempo_ajustado, altura_inicial, vel_maxima)
-    posicion_tiro_vertical = posicion_tiro_vertical[posicion_tiro_vertical > 0]
-    return posicion_tiro_vertical

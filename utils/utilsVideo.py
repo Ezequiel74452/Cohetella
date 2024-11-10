@@ -1,13 +1,11 @@
 import cv2
 import numpy as np
+from scipy.ndimage import gaussian_filter1d
+from scipy.signal import savgol_filter
 
 PX_TO_CM = 0.64286
 PX_TO_CM_OBLICUO = 0.9047
-TIEMPO_LANZAMIENTO = 0.475
-TIEMPO_ALTURA_MAXIMA = 1.267
-TIEMPO_ENTRE_LANZ_ALTMAX = 1.225 - 0.475
-TIEMPO_DEJA_AGUA_CTE=0.675
-TIEMPO_ATERRIZAJE = 1.93
+
 def rescaleFrame(frame, scale=0.75):
   width = frame.shape[1] * scale
   height = frame.shape[0] * scale
@@ -20,17 +18,6 @@ def fromPixelsToMeters(x):
 def fromPixelsToMetersOblicuo(x):
   return x * PX_TO_CM_OBLICUO / 100
 
-def masaConRespectoAlTiempo(t):
-    # Calcular la pendiente de disminución de la masa
-    pendiente = (0.03 - 0.73) / (TIEMPO_DEJA_AGUA_CTE - TIEMPO_LANZAMIENTO)
-    
-    # Utilizar np.where para hacer comparaciones vectorizadas con los tiempos dados
-    return np.where(t < TIEMPO_LANZAMIENTO, 0.73,  # Antes del lanzamiento
-                    np.where(t > TIEMPO_DEJA_AGUA_CTE, 0.03,  # Después de la altura máxima
-										0.73 + pendiente * (t - TIEMPO_LANZAMIENTO)))  # Durante el ascenso
-
-def smooth_positions(positions, window_size=10):
-	return np.convolve(positions, np.ones(window_size)/window_size, mode='valid')
 
 def posicion_en_metros_vertical(df):
   df['Posición Y (m)'] = df['Posición Y (px)'].apply(lambda x: fromPixelsToMeters(x))
@@ -42,92 +29,33 @@ def posicion_en_metros_oblicuo(df):
 	return df
 
 def suavizar_df_vertical(df):
-  smoothed_positions = smooth_positions(df['Posición Y (m)'], window_size=10)
+  smoothed_positions = gaussian_filter1d(df['Posición Y (m)'], sigma=2)
+  #smoothed_positions = savgol_filter(df['Posición Y (m)'], window_length=9, polyorder=2)
   df = df.iloc[:len(smoothed_positions)]
   df['Posición Y (m)'] = smoothed_positions
   return df
 
 def suavizar_df_oblicuo(df):
-  smoothed_positions_y = smooth_positions(df['Posición Y (m)'], window_size=10)
-  smoothed_positions_x = smooth_positions(df['Posición X (m)'], window_size=10)
+  smoothed_positions_y = gaussian_filter1d(df['Posición Y (m)'], sigma=2)
+  smoothed_positions_x = gaussian_filter1d(df['Posición X (m)'], sigma=2)
   df = df.iloc[:len(smoothed_positions_y)]
   df['Posición Y (m)'] = smoothed_positions_y
   df['Posición X (m)'] = smoothed_positions_x
   return df
 
-def calcular_velocidad_vertical(df):
-	# Calcular la diferencia de posición y tiempo con un desplazamiento de 5
-	df['diferencia_posicion'] = df['Posición Y (m)'].shift(-5) - df['Posición Y (m)'].shift(5)
-	df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
-	
-	# Calcular la velocidad dividiendo las diferencias
-	df['Velocidad (m/s)'] = df['diferencia_posicion'] / df['diferencia_tiempoV']
-	
-	# Rellenar valores NaN con 0 en la columna de velocidad
-	df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
-	
-	return df
+def calcular_tiempo_lanzamiento(df, vel_threshold=0.5):
+  lanzamiento_idx = np.where(df['Velocidad (m/s)'] > vel_threshold)[0][0]
+  return df.iloc[lanzamiento_idx]
 
-
-def calcular_velocidad_oblicuo(df):
-  df['diferencia_posicion_x'] = df['Posición X (m)'].shift(-5) - df['Posición X (m)'].shift(5)
-  df['diferencia_posicion_y'] = df['Posición Y (m)'].shift(-5) - df['Posición Y (m)'].shift(5)
-  df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
-  df['Velocidad X (m/s)'] = df['diferencia_posicion_x'] / df['diferencia_tiempoV']
-  df['Velocidad Y (m/s)'] = df['diferencia_posicion_y'] / df['diferencia_tiempoV']
-  df['Velocidad X (m/s)'] = df['Velocidad X (m/s)'].fillna(0)
-  df['Velocidad Y (m/s)'] = df['Velocidad Y (m/s)'].fillna(0)
-  return df
-
-def calcular_aceleracion_vertical(df):
-  df['diferencia_velocidad'] = df['Velocidad (m/s)'].shift(-5) - df['Velocidad (m/s)'].shift(5)
-  df['diferencia_tiempoA'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
-  df['Aceleración (m/s^2)'] = df['diferencia_velocidad'] / df['diferencia_tiempoA']
-  df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
-  return df
-
-def calcular_aceleracion_oblicuo(df):
-  df['diferencia_velocidad_x'] = df['Velocidad X (m/s)'].shift(-5) - df['Velocidad X (m/s)'].shift(5)
-  df['diferencia_velocidad_y'] = df['Velocidad Y (m/s)'].shift(-5) - df['Velocidad Y (m/s)'].shift(5)
-  df['diferencia_tiempoA'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
-  df['Aceleración X (m/s^2)'] = df['diferencia_velocidad_x'] / df['diferencia_tiempoA']
-  df['Aceleración Y (m/s^2)'] = df['diferencia_velocidad_y'] / df['diferencia_tiempoA']
-  df['Aceleración X (m/s^2)'] = df['Aceleración X (m/s^2)'].fillna(0)
-  df['Aceleración Y (m/s^2)'] = df['Aceleración Y (m/s^2)'].fillna(0)
-  return df
-
-def calcular_masa_vertical(df):
-	# Calcular las masas con respecto al tiempo ajustado
-	df['Masa (kg)'] = masaConRespectoAlTiempo(df['Tiempo (s)'])    
-	# Reemplazar NaN en las filas que no tienen valores de masa por 0
-	df['Masa (kg)'] = df['Masa (kg)'].fillna(0)  
-	return df
-
-def calcular_cantidad_movimiento(df):
-  df['Cantidad de Movimiento'] = df['Velocidad (m/s)'] * df['Masa (kg)']
-  return df 
-
-def calcular_fuerza(df):
-  df['diferencia_cantidad_movimiento'] = df['Cantidad de Movimiento'].shift(-3) - df['Cantidad de Movimiento'].shift(3)
-  df['diferencia_tiempoCM'] = df['Tiempo (s)'].shift(-3) - df['Tiempo (s)'].shift(3)
-  df['Fuerza (N)'] = df['diferencia_cantidad_movimiento'] / df['diferencia_tiempoCM']
-  df['Fuerza (N)'] = df['Fuerza (N)'].fillna(0)
-  return df
-
-def calcular_energia_cinetica(df):
-  df['Energia Cinetica (J)'] = 0.5 * df['Masa (kg)'] * df['Velocidad (m/s)']**2
-  return df
-
-def calcular_energia_potencial(df):
-  df['Energia Potencial (J)'] = df['Masa (kg)'] * 9.81 * df['Posición Y (m)']
-  return df
-
-def calcular_energia_mecanica(df):
-  df['Energia Mecanica (J)'] = df['Energia Cinetica (J)'] + df['Energia Potencial (J)']
-  return df
-
-def calcular_rozamiento_viscoso(df):
-  df.loc[(df['Tiempo (s)'] >= TIEMPO_ALTURA_MAXIMA) & (df['Tiempo (s)'] <= TIEMPO_ATERRIZAJE), 'Rozamiento viscoso (N)'] = (
-		df['Masa (kg)'] * (9.81 + df['Aceleración (m/s^2)'])
-  )
-  return df
+def calcular_tiempo_aterrizaje(df, dfTiempoVelMaxFinal, vel_max_threshold=-0.5, altura_umbral=0.3):
+    indices_aterrizaje = np.where(
+        (df['Velocidad (m/s)'] > vel_max_threshold) & 
+        (df['Tiempo (s)'] > dfTiempoVelMaxFinal['Tiempo (s)']) &
+        (np.abs(df['Posición Y (m)']) < altura_umbral)
+    )[0]
+    
+    if len(indices_aterrizaje) > 0:
+        aterrizaje_idx = indices_aterrizaje[0]
+        return df.iloc[aterrizaje_idx]
+    else:
+        return None  
