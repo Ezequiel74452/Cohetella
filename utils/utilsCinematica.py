@@ -7,6 +7,7 @@ from utils.utilsTiroOblicuo import *
 from utils.utilsTiroVertical import *
 from scipy.optimize import curve_fit
 
+
 LBL_TIEMPO = "Tiempo (s)"
 LBL_POS_X = "Posición X (m)"
 LBL_POS_Y = "Posición Y (m)"
@@ -25,16 +26,16 @@ def filtrar_inicio_df(dataFrame, tiempo, eje):
 # ----------------- CÁLCULOS DE CINEMÁTICA LANZAMIENTO VERTICAL-----------------
 
 def calcular_velocidad_vertical(df):
-  df['diferencia_posicion'] = df['Posición Y (m)'].shift(-5) - df['Posición Y (m)'].shift(5)
-  df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
+  df['diferencia_posicion'] = df['Posición Y (m)'].shift(-2) - df['Posición Y (m)'].shift(2)
+  df['diferencia_tiempoV'] = df['Tiempo (s)'].shift(-2) - df['Tiempo (s)'].shift(2)
   df['Velocidad (m/s)'] = df['diferencia_posicion'] / df['diferencia_tiempoV']
   df['Velocidad (m/s)'] = df['Velocidad (m/s)'].fillna(0)
   df.drop(['diferencia_posicion', 'diferencia_tiempoV'], axis=1, inplace=True)
   return df
 
 def calcular_aceleracion_vertical(df):
-  df['diferencia_velocidad'] = df['Velocidad (m/s)'].shift(-5) - df['Velocidad (m/s)'].shift(5)
-  df['diferencia_tiempoA'] = df['Tiempo (s)'].shift(-5) - df['Tiempo (s)'].shift(5)
+  df['diferencia_velocidad'] = df['Velocidad (m/s)'].shift(-2) - df['Velocidad (m/s)'].shift(2)
+  df['diferencia_tiempoA'] = df['Tiempo (s)'].shift(-2) - df['Tiempo (s)'].shift(2)
   df['Aceleración (m/s^2)'] = df['diferencia_velocidad'] / df['diferencia_tiempoA']
   df['Aceleración (m/s^2)'] = df['Aceleración (m/s^2)'].fillna(0)
   df.drop(['diferencia_velocidad', 'diferencia_tiempoA'], axis=1, inplace=True)

@@ -21,11 +21,14 @@ def vertical_track(path, origen_y, origen_x, fps):
 	PISO = VID_HEIGHT - int(origen_y)
 	ORIGEN = int(origen_x)
 	FPS = int(fps)
+ 
+	print(f"Resolucion del video: {VID_WIDTH}x{VID_HEIGHT}")
+	print(f"Piso: {PISO}")
 
 	dataFrame = pd.DataFrame(data= {'Tiempo (s)':np.array([]), 'Posición Y (px)':np.array([])})
 
 	tracker = cv2.legacy.TrackerCSRT.create()
-	frame_resized = uv.rescaleFrame(primerFrame, scale=.5)
+	frame_resized = uv.rescaleFrame(primerFrame, scale=0.5)
 	bbox = cv2.selectROI(frame_resized, False)
 	if bbox != (0, 0, 0, 0):
 		tracker.init(frame_resized, bbox)
@@ -37,7 +40,7 @@ def vertical_track(path, origen_y, origen_x, fps):
 				exito, frame_actual = videoCapturado.read()
 				if not exito:
 						break
-				frame_resized = uv.rescaleFrame(frame_actual, scale=.5)
+				frame_resized = uv.rescaleFrame(frame_actual, scale=0.5)
 
 				# Actualizar el rastreador
 				success, bbox = tracker.update(frame_resized)
@@ -46,6 +49,7 @@ def vertical_track(path, origen_y, origen_x, fps):
 						center_x = x + w // 2
 						center_y = y + h // 2
 
+						#print(f"X: {center_x}, Y: {center_y}")
 						# Guardar las posiciones de acuerdo a nuestro sistema de coordenadas
 						final_y = VID_HEIGHT - PISO - (center_y * 2)
 
@@ -56,6 +60,8 @@ def vertical_track(path, origen_y, origen_x, fps):
 
 						dataFrameAuxiliar = pd.DataFrame(data=datos_del_frame)
 						dataFrame = pd.concat([dataFrame, dataFrameAuxiliar], ignore_index=True)
+
+						print(f"Y: {final_y}, Tiempo: {time_elapsed}")
 
 						# Dibujar la caja y el centro
 						cv2.rectangle(frame_resized, (x, y), (x + w, y + h), (0, 255, 0), 2)

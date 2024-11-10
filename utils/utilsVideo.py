@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
-from scipy.signal import savgol_filter
 
 PX_TO_CM = 0.64286
 PX_TO_CM_OBLICUO = 0.9047
@@ -29,8 +28,7 @@ def posicion_en_metros_oblicuo(df):
 	return df
 
 def suavizar_df_vertical(df):
-  smoothed_positions = gaussian_filter1d(df['Posición Y (m)'], sigma=2)
-  #smoothed_positions = savgol_filter(df['Posición Y (m)'], window_length=9, polyorder=2)
+  smoothed_positions = gaussian_filter1d(df['Posición Y (m)'], sigma=4)
   df = df.iloc[:len(smoothed_positions)]
   df['Posición Y (m)'] = smoothed_positions
   return df
