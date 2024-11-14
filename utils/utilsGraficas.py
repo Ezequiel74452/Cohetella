@@ -22,6 +22,7 @@ COLOR_FUNCION_VELOCIDAD_1 = 'red'
 COLOR_FUNCION_VELOCIDAD_2 = 'orange'
 COLOR_VELOCIDAD_CAIDA_LIBRE = 'green'
 COLOR_VELOCIDAD_TIRO_VERTICAL = 'purple'
+COLOR_VELOCIDAD_EXP = 'blue'
 
 COLOR_MASA = 'blue'
 COLOR_CANTIDAD_MOVIMIENTO = 'red'
@@ -68,6 +69,8 @@ def graficar_plotly(dataFrame):
     alturaMaxProm = puntoMedioAlturaMaxima(dataFrame)
     velocidadMaxInicial = calcularVelocidadMaximaInicial(dataFrame)
     velocidadMaxFinal = calcularVelocidadMaximaFinal(dataFrame)
+    tiempoLanzamiento = calcular_tiempo_lanzamiento(dataFrame)
+    tiempoAterrizaje = calcular_tiempo_aterrizaje(dataFrame, velocidadMaxFinal)
     
     #Comparación con caida libre desde el punto de altura máxima
     velocidad_ajustada_CL, tiempo_caida_libre, g_ajustado_CL, err_g_CL = ajustar_velocidad_CL(dataFrame, alturaMaxProm, velocidadMaxFinal)
@@ -80,6 +83,9 @@ def graficar_plotly(dataFrame):
     velocidad_tiro_vertical = calcular_velocidad_tiro_vertical(dataFrame, velocidadMaxInicial, velocidadMaxFinal)
     posicion_ajustada_TV = ajustar_posicion_TV(dataFrame, velocidadMaxInicial, velocidadMaxFinal, g_ajustado_TV)
     posicion_tiro_vertical = calcular_posicion_tiro_vertical(dataFrame, velocidadMaxInicial, velocidadMaxFinal)
+    
+    #Exp
+    velocidad_exp, tiempo_exp = calcular_velocidad_exp(dataFrame, tiempoLanzamiento, tiempoAterrizaje)
     
     
     fig = make_subplots(rows=9, cols=1, 
@@ -102,7 +108,9 @@ def graficar_plotly(dataFrame):
                                 tiempo_caida_libre,
                                 velocidad_ajustada_TV,
                                 velocidad_tiro_vertical, 
-                                tiempo_tiro_vertical)
+                                tiempo_tiro_vertical,
+                                velocidad_exp,
+                                tiempo_exp)
     
     graficar_aceleracion_vertical(fig, dataFrame)
     
@@ -119,7 +127,7 @@ def graficar_plotly(dataFrame):
     graficar_rozamiento_con_aire(fig, dataFrame)
     
     fig.update_layout(
-        height=3600, # altura del gráfico
+        height=4500, # altura del gráfico
         title='Datos de la botella en el tiempo',
         legend_tracegroupgap=320
     )
@@ -251,7 +259,7 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada_CL, posicion_ca
     #              y1=dataFrame['Posición Y (m)'].max(),
     #              line=dict(color='red', dash='dash'))
     
-def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad_caida_libre, tiempo_caida_libre, velocidad_ajustada_TV, velocidad_tiro_vertical, tiempo_tiro_vertical):
+def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad_caida_libre, tiempo_caida_libre, velocidad_ajustada_TV, velocidad_tiro_vertical, tiempo_tiro_vertical, velocidad_exp, tiempo_exp):
     
     # Graficar la velocidad
     fig.add_trace(go.Scatter(
@@ -306,6 +314,16 @@ def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad
         line=dict(color=COLOR_VELOCIDAD_TIRO_VERTICAL, dash='dash'),
         legendgroup='2',
         visible='legendonly'  
+    ),row=2, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=tiempo_exp,
+        y=velocidad_exp,
+        mode='lines',
+        name='Velocidad esperada',
+        line=dict(color=COLOR_VELOCIDAD_EXP, dash='dash'),
+        legendgroup='2',
+        visible='legendonly'
     ),row=2, col=1)
     
 

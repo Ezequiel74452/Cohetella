@@ -23,8 +23,8 @@ def calcular_cantidad_movimiento(df):
   return df 
 
 def calcular_fuerza(df):
-  df['diferencia_cantidad_movimiento'] = df['Cantidad de Movimiento'].shift(-3) - df['Cantidad de Movimiento'].shift(3)
-  df['diferencia_tiempoCM'] = df['Tiempo (s)'].shift(-3) - df['Tiempo (s)'].shift(3)
+  df['diferencia_cantidad_movimiento'] = df['Cantidad de Movimiento'].shift(-2) - df['Cantidad de Movimiento'].shift(2)
+  df['diferencia_tiempoCM'] = df['Tiempo (s)'].shift(-2) - df['Tiempo (s)'].shift(2)
   df['Fuerza (N)'] = df['diferencia_cantidad_movimiento'] / df['diferencia_tiempoCM']
   df['Fuerza (N)'] = df['Fuerza (N)'].fillna(0)
   df.drop(['diferencia_cantidad_movimiento', 'diferencia_tiempoCM'], axis=1, inplace=True)

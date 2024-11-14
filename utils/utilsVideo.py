@@ -41,7 +41,7 @@ def suavizar_df_oblicuo(df):
   df['Posición X (m)'] = smoothed_positions_x
   return df
 
-def calcular_tiempo_lanzamiento(df, vel_threshold=0.5):
+def calcular_tiempo_lanzamiento(df, vel_threshold=0.3):
   lanzamiento_idx = np.where(df['Velocidad (m/s)'] > vel_threshold)[0][0]
   return df.iloc[lanzamiento_idx]
 

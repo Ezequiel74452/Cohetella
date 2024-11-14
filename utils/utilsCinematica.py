@@ -16,6 +16,9 @@ LBL_VEL_Y = "Velocidad Y (m/s)"
 LBL_ACC_X = "Aceleración X (m/s^2)"
 LBL_ACC_Y = "Aceleración Y (m/s^2)"
 
+def velocidad_cohete(t, m):
+    return -9.8 * t + 7 * np.log(0.73 / m)
+
 def filtrar_df(dataFrame, lower_bound, upper_bound, eje):
 	return dataFrame[eje][(dataFrame[LBL_TIEMPO] >= lower_bound) & (dataFrame[LBL_TIEMPO] <= upper_bound)]
 
@@ -191,7 +194,16 @@ def calcular_posicion_tiro_vertical(dataFrame, dfVelMaxInicial, dfVelMaxFinal):
     return posicion_tiro_vertical
   
 
-
+def calcular_velocidad_exp(dataFrame, dfTiempoLanzamiento, dfTiempoAterrizaje):
+    tiempo_lanzamiento = dfTiempoLanzamiento['Tiempo (s)']
+    tiempo_aterrizaje = dfTiempoAterrizaje['Tiempo (s)']
+    tiempo_filtrado = dataFrame['Tiempo (s)'][(dataFrame['Tiempo (s)'] >= tiempo_lanzamiento) & (dataFrame['Tiempo (s)'] <= tiempo_aterrizaje)]
+    
+    tiempo_ajustado = tiempo_filtrado - tiempo_lanzamiento
+    masa_filtrada = dataFrame['Masa (kg)'][(dataFrame['Tiempo (s)'] >= tiempo_lanzamiento) & (dataFrame['Tiempo (s)'] <= tiempo_aterrizaje)]
+    print(f"masa filtrada: {masa_filtrada}, tiempo ajustado: {tiempo_ajustado}")
+    velocidad_exp = velocidad_cohete(tiempo_ajustado, masa_filtrada)
+    return velocidad_exp, tiempo_filtrado
 
 # ----------------- CÁLCULOS DE CINEMÁTICA LANZAMIENTO OBLICUO -----------------
 
