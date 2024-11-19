@@ -129,22 +129,24 @@ def graficar_plotly(dataFrame):
     fig.update_layout(
         height=4500, # altura del gráfico
         title='Datos de la botella en el tiempo',
-        legend_tracegroupgap=320
+        legend_tracegroupgap=440
     )
     fig.update_layout(legend=dict(groupclick="toggleitem"))
     fig.update_xaxes(showgrid=True, gridcolor='LightGray')
-    fig.update_xaxes(title_text="Tiempo (s)")
-    fig.update_yaxes(title_text="Posición (m)", row=1, col=1)
-    fig.update_yaxes(title_text="Velocidad (m/s)", row=2, col=1)
-    fig.update_yaxes(title_text="Aceleración (m/s^2)", row=3, col=1)
-    fig.update_yaxes(title_text="Masa (kg)", row=4, col=1)
+    fig.update_xaxes(tickfont=dict(size=16))  # Aumenta el tamaño de la fuente en los números del eje X
+    fig.update_yaxes(tickfont=dict(size=16))  # Aumenta el tamaño de la fuente en los números del eje Y
+    fig.update_xaxes(title_text="Tiempo (s)", title_font=dict(size=18))
+    fig.update_yaxes(title_text="Posición (m)", title_font=dict(size=18), row=1, col=1)
+    fig.update_yaxes(title_text="Velocidad (m/s)", title_font=dict(size=18), row=2, col=1)
+    fig.update_yaxes(title_text="Aceleración (m/s^2)", title_font=dict(size=18), row=3, col=1)
+    fig.update_yaxes(title_text="Masa (kg)", title_font=dict(size=18), row=4, col=1)
     fig.update_yaxes(title_text="Cant. de Movimiento (kg*m/s)", row=5, col=1)
-    fig.update_yaxes(title_text="Fuerza (N)", row=6, col=1)
-    fig.update_yaxes(title_text="Energía (J)", row=7, col=1)
-    fig.update_yaxes(title_text="Energía (J)", row=8, col=1)
-    fig.update_xaxes(title_text="Posición Y (m)", row=8, col=1)
-    fig.update_yaxes(title_text="Rozamiento viscoso", row=9, col=1)
-    fig.update_xaxes(title_text="Velocidad (m/s)", row=9, col=1)
+    fig.update_yaxes(title_text="Fuerza (N)", title_font=dict(size=18), row=6, col=1)
+    fig.update_yaxes(title_text="Energía (J)", title_font=dict(size=18), row=7, col=1)
+    fig.update_yaxes(title_text="Energía (J)", title_font=dict(size=18), row=8, col=1)
+    fig.update_xaxes(title_text="Posición Y (m)", title_font=dict(size=18), row=8, col=1)
+    fig.update_yaxes(title_text="Rozamiento viscoso", title_font=dict(size=18), row=9, col=1)
+    fig.update_xaxes(title_text="Velocidad (m/s)", title_font=dict(size=18), row=9, col=1)
     fig.update_yaxes(showgrid=True, gridcolor='LightGray')
     
     # Guardar la figura como HTML, sin incluir el script Plotly (lo cargamos desde CDN)
@@ -252,13 +254,7 @@ def graficar_posicion_vertical(fig, dataFrame, posicion_ajustada_CL, posicion_ca
                   y0=dataFrame['Posición Y (m)'].min(),
                   y1=dataFrame['Posición Y (m)'].max(),
                   line=dict(color='red', dash='dash'))
-    #fig.add_shape(type='line',
-    #              x0=alturaMaxF['Tiempo (s)'],
-    #              x1=alturaMaxF['Tiempo (s)'],
-    #              y0=dataFrame['Posición Y (m)'].min(),
-    #              y1=dataFrame['Posición Y (m)'].max(),
-    #              line=dict(color='red', dash='dash'))
-    
+        
 def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad_caida_libre, tiempo_caida_libre, velocidad_ajustada_TV, velocidad_tiro_vertical, tiempo_tiro_vertical, velocidad_exp, tiempo_exp):
     
     # Graficar la velocidad
@@ -316,15 +312,6 @@ def graficar_velocidad_vertical(fig, dataFrame, velocidad_ajustada_CL, velocidad
         visible='legendonly'  
     ),row=2, col=1)
     
-    fig.add_trace(go.Scatter(
-        x=tiempo_exp,
-        y=velocidad_exp,
-        mode='lines',
-        name='Velocidad esperada',
-        line=dict(color=COLOR_VELOCIDAD_EXP, dash='dash'),
-        legendgroup='2',
-        visible='legendonly'
-    ),row=2, col=1)
     
 
 
@@ -372,7 +359,20 @@ def graficar_fuerza(fig, dataFrame):
         legendgrouptitle_text='Fuerza',
         legendgroup='6'
     ),row=6, col=1)
+    
+    fig.add_trace(go.Scatter(
+        x=dataFrame['Tiempo (s)'],
+        y=dataFrame['Peso (N)'],
+        mode='lines',
+        name='Peso (N)',
+        line=dict(color="red"),
+        legendgrouptitle_text='Peso',
+        legendgroup='6'
+    ),row=6, col=1)
 
+    
+    
+    
 def graficar_energia(fig, dataFrame):
     fig.add_trace(go.Scatter(
         x=dataFrame['Tiempo (s)'],

@@ -23,11 +23,11 @@ def calcular_cantidad_movimiento(df):
   return df 
 
 def calcular_fuerza(df):
-  df['diferencia_cantidad_movimiento'] = df['Cantidad de Movimiento'].shift(-2) - df['Cantidad de Movimiento'].shift(2)
-  df['diferencia_tiempoCM'] = df['Tiempo (s)'].shift(-2) - df['Tiempo (s)'].shift(2)
-  df['Fuerza (N)'] = df['diferencia_cantidad_movimiento'] / df['diferencia_tiempoCM']
+  df['Fuerza (N)'] = df['Masa (kg)'] * df['Aceleración (m/s^2)']
   df['Fuerza (N)'] = df['Fuerza (N)'].fillna(0)
-  df.drop(['diferencia_cantidad_movimiento', 'diferencia_tiempoCM'], axis=1, inplace=True)
+  
+  df['Peso (N)'] = df['Masa (kg)'] * -9.81
+  
   return df
 
 def calcular_rozamiento_viscoso(df, df_tiempo_altura_maxima, df_tiempo_aterrizaje):
